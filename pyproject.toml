@@ -48,6 +48,7 @@ pytest = "*"
 pytest-cov = "*"
 pytest-github-actions-annotate-failures = "*"
 pytest-sugar = "*"
+watchdog = "^6.0.0"
 
 [tool.poetry-dynamic-versioning]
 enable = true
