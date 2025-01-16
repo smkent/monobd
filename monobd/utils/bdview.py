@@ -10,7 +10,8 @@ from contextlib import contextmanager
 from functools import cached_property
 from importlib import reload
 from threading import Condition, Event, Thread
-from typing import Any, Callable, Iterator
+from typing import Any, Callable
+from collections.abc import Iterator
 from urllib.error import URLError
 from urllib.request import urlopen
 
