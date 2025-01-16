@@ -18,7 +18,7 @@ class ExamplePart(BasePartObject):
             Align.CENTER,
             Align.CENTER,
         ),
-        mode: Mode = Mode.SUBTRACT,
+        mode: Mode = Mode.ADD,
     ):
         with BuildPart() as p:
             Box(10, 20, 30)
