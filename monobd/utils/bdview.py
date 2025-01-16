@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-import subprocess
+import subprocess  # nosec B404
 import sys
 import time
 import traceback
 import webbrowser
 from argparse import ArgumentParser, Namespace
+from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import cached_property
 from importlib import reload
 from threading import Condition, Event, Thread
 from typing import Any, Callable
-from collections.abc import Iterator
 from urllib.error import URLError
 from urllib.request import urlopen
 
@@ -108,10 +108,10 @@ class Watcher:
             viewer_process = subprocess.Popen(
                 ["python", "-m", "ocp_vscode"]
                 + self.args.ocp_viewer_args.split()
-            )
+            )  # nosec B603
             for _ in range(100):
                 try:
-                    urlopen(url).read()
+                    urlopen(url).read()  # nosec B310
                     break
                 except URLError:
                     time.sleep(0.25)
