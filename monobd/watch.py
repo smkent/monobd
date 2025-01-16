@@ -24,8 +24,6 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-import monobd
-
 
 class Watcher:
     class EventHandler(PatternMatchingEventHandler):
