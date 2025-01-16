@@ -23,6 +23,7 @@ dependencies = [
 ]
 
 [project.scripts]
+monobd-watch = "monobd.watch:main"
 
 [tool.poetry]
 requires-poetry = ">=2.0"
