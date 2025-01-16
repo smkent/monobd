@@ -23,6 +23,7 @@ dependencies = [
 ]
 
 [project.scripts]
+bdview = "monobd.utils.bdview:main"
 
 [tool.poetry]
 requires-poetry = ">=2.0"
@@ -48,6 +49,8 @@ pytest = "*"
 pytest-cov = "*"
 pytest-github-actions-annotate-failures = "*"
 pytest-sugar = "*"
+watchdog = "^6.0.0"
+ocp-vscode = "^2.6.1"
 
 [tool.poetry-dynamic-versioning]
 enable = true
