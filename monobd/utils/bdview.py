@@ -9,12 +9,13 @@ from argparse import ArgumentParser, Namespace
 from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import cached_property
-from importlib import reload
+from importlib import import_module, reload
 from threading import Condition, Event, Thread
 from typing import Any, Callable
 from urllib.error import URLError
 from urllib.request import urlopen
 
+from ocp_vscode import show  # type: ignore
 from ocp_vscode.comms import CMD_PORT as OCP_VIEWER_PORT  # type: ignore
 from watchdog.events import (
     DirCreatedEvent,
@@ -24,6 +25,8 @@ from watchdog.events import (
     PatternMatchingEventHandler,
 )
 from watchdog.observers import Observer
+
+from ..common import BaseModel
 
 
 class Watcher:
@@ -77,7 +80,7 @@ class Watcher:
             metavar="seconds",
             type=float,
             help=(
-                "How long to wait after event before running target"
+                "How long to wait after event before rendering model"
                 " (default: %(default)s seconds)"
             ),
         )
@@ -93,7 +96,7 @@ class Watcher:
             ),
         )
         ap.add_argument(
-            "target", help="Module to execute when changes detected"
+            "model_name", help="Model name to render when changes detected"
         )
         return ap.parse_args()
 
@@ -160,16 +163,30 @@ class Watcher:
         return _runner
 
     def run_callback(self) -> None:
-        mn = __name__.split(".")[0]
-        current_module = sys.modules[mn]
-        for mod in [
-            p
-            for m, p in sys.modules.items()
-            if m == mn or m.startswith(f"{mn}.")
-        ]:
-            reload(mod)
         try:
-            getattr(current_module, self.args.target).main()
+            mn = __name__.split(".")[0]
+            current_module = sys.modules[mn]
+            for mod in [
+                p
+                for m, p in sys.modules.items()
+                if m == mn or m.startswith(f"{mn}.")
+            ]:
+                try:
+                    reload(mod)
+                except ModuleNotFoundError:
+                    traceback.print_exc()
+            if not hasattr(current_module.models, self.args.model_name):
+                import_module(
+                    f"{current_module.models.__name__}.{self.args.model_name}"
+                )
+            model_class = getattr(
+                current_module.models, self.args.model_name
+            ).Model()
+            assert isinstance(model_class, BaseModel)
+            model = model_class.model
+            print(model.show_topology())
+            show(model, axes=True, axes0=True, transparent=False)
+            model_class.export_to_step()
         except KeyboardInterrupt:
             raise
         except Exception:
