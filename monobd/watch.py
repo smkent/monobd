@@ -148,6 +148,7 @@ class Watcher:
 
     def run_callback(self) -> None:
         mn = __name__.split(".")[0]
+        current_module = sys.modules[mn]
         for mod in [
             p
             for m, p in sys.modules.items()
@@ -155,7 +156,7 @@ class Watcher:
         ]:
             reload(mod)
         try:
-            getattr(monobd, self.args.target).main()
+            getattr(current_module, self.args.target).main()
         except KeyboardInterrupt:
             raise
         except Exception:
