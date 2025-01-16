@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 import time
 import traceback
+import webbrowser
 from argparse import ArgumentParser, Namespace
+from contextlib import contextmanager
 from functools import cached_property
 from importlib import reload
 from threading import Condition, Event, Thread
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
+from urllib.error import URLError
+from urllib.request import urlopen
 
+from ocp_vscode.comms import CMD_PORT as OCP_VIEWER_PORT  # type: ignore
 from watchdog.events import (
     DirCreatedEvent,
     DirModifiedEvent,
@@ -40,26 +46,30 @@ class Watcher:
             self.callback()
 
     def __call__(self) -> None:
-        event_handler = self.EventHandler(
-            callback=self.runner.trigger, patterns=["*.py"]
-        )
-        observer = Observer()
-        observer.schedule(event_handler, ".", recursive=True)
-        observer.start()
-        try:
-            while True:
-                time.sleep(1000)
-        except KeyboardInterrupt:
-            print("")
-        finally:
-            self.runner.stop()
-            observer.stop()
-            observer.join()
-            self.runner.join()
+        with self.ocp_viewer(), self.event_watcher():
+            try:
+                while True:
+                    time.sleep(1000)
+            except KeyboardInterrupt:
+                print("")
 
     @cached_property
     def args(self) -> Namespace:
         ap = ArgumentParser("Model automatic renderer for development")
+        ap.add_argument(
+            "--no-viewer",
+            "-N",
+            dest="viewer",
+            action="store_false",
+            help="Don't run ocp_viewer",
+        )
+        ap.add_argument(
+            "--no-browser",
+            "-B",
+            dest="open_viewer",
+            action="store_false",
+            help="Don't open browser for ocp_viewer",
+        )
         ap.add_argument(
             "--delay",
             "-d",
@@ -76,6 +86,50 @@ class Watcher:
             "target", help="Module to execute when changes detected"
         )
         return ap.parse_args()
+
+    @contextmanager
+    def ocp_viewer(self) -> Iterator[None]:
+        if not self.args.viewer:
+            yield
+            return
+        try:
+            print("Starting OCP viewer")
+            url = f"http://localhost:{OCP_VIEWER_PORT}/viewer"
+            viewer_process = subprocess.Popen(["python", "-m", "ocp_vscode"])
+            for _ in range(100):
+                try:
+                    urlopen(url).read()
+                    break
+                except URLError:
+                    time.sleep(0.25)
+            else:
+                raise Exception("OCP viewer communication failed")
+            if self.args.open_viewer:
+                webbrowser.open_new_tab(url)
+                time.sleep(0.5)
+            yield
+        finally:
+            print("Stopping OCP viewer")
+            viewer_process.kill()
+            viewer_process.communicate()
+
+    @contextmanager
+    def event_watcher(self) -> Iterator[None]:
+        try:
+            print("Starting event watcher")
+            event_handler = self.EventHandler(
+                callback=self.runner.trigger, patterns=["*.py"]
+            )
+            observer = Observer()
+            observer.schedule(event_handler, ".", recursive=True)
+            observer.start()
+            yield
+        finally:
+            print("Stopping event watcher")
+            self.runner.stop()
+            observer.stop()
+            observer.join()
+            self.runner.join()
 
     @cached_property
     def condition(self) -> Condition:
