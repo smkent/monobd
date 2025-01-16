@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import subprocess
 import sys
 import time
+import traceback
 from argparse import ArgumentParser, Namespace
 from functools import cached_property
-from pathlib import Path
+from importlib import reload
 from threading import Condition, Event, Thread
 from typing import Any, Callable
 
@@ -17,6 +17,8 @@ from watchdog.events import (
     PatternMatchingEventHandler,
 )
 from watchdog.observers import Observer
+
+import monobd
 
 
 class Watcher:
@@ -71,7 +73,7 @@ class Watcher:
             ),
         )
         ap.add_argument(
-            "target", type=Path, help="File to execute when changes detected"
+            "target", help="Module to execute when changes detected"
         )
         return ap.parse_args()
 
@@ -91,9 +93,19 @@ class Watcher:
         return _runner
 
     def run_callback(self) -> None:
-        cmd = ["python", self.args.target]
-        print(f'+ {" ".join([str(s) for s in cmd])}', file=sys.stderr)
-        subprocess.run(cmd)
+        mn = __name__.split(".")[0]
+        for mod in [
+            p
+            for m, p in sys.modules.items()
+            if m == mn or m.startswith(f"{mn}.")
+        ]:
+            reload(mod)
+        try:
+            getattr(monobd, self.args.target).main()
+        except KeyboardInterrupt:
+            raise
+        except Exception:
+            traceback.print_exc()
         print("")
 
 
@@ -115,6 +127,7 @@ class Runner(Thread):
 
     def run(self) -> None:
         with self.condition:
+            self.run_callback()
             while True:
                 timeout = None
                 tm = time.time()

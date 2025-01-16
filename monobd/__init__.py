@@ -1,3 +1,4 @@
+from . import example
 from .__version__ import __version__ as version
 
-__all__ = ["version"]
+__all__ = ["version", "example"]
