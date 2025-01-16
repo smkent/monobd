@@ -24,6 +24,7 @@ dependencies = [
 
 [project.scripts]
 bdview = "monobd.utils.bdview:main"
+bdrender = "monobd.utils.bdrender:main"
 
 [tool.poetry]
 requires-poetry = ">=2.0"

@@ -10,6 +10,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import cached_property
 from importlib import import_module, reload
+from pathlib import Path
 from threading import Condition, Event, Thread
 from typing import Any, Callable
 from urllib.error import URLError
@@ -26,7 +27,7 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from ..common import BaseModel
+from ..common import Model
 
 
 class Watcher:
@@ -74,7 +75,7 @@ class Watcher:
         )
         ap.add_argument(
             "--delay",
-            "-d",
+            "-D",
             dest="delay",
             default=0.5,
             metavar="seconds",
@@ -96,7 +97,22 @@ class Watcher:
             ),
         )
         ap.add_argument(
+            "-d",
+            "--destination",
+            dest="dest",
+            type=Path,
+            metavar="dir",
+            default=None,
+            help=(
+                "Export rendered models to this directory on render"
+                " (default: no models exported)"
+            ),
+        )
+        ap.add_argument(
             "model_name", help="Model name to render when changes detected"
+        )
+        ap.add_argument(
+            "variant_name", nargs="?", default="", help="Model variant name"
         )
         return ap.parse_args()
 
@@ -179,14 +195,13 @@ class Watcher:
                 import_module(
                     f"{current_module.models.__name__}.{self.args.model_name}"
                 )
-            model_class = getattr(
-                current_module.models, self.args.model_name
-            ).Model()
-            assert isinstance(model_class, BaseModel)
-            model = model_class.model
-            print(model.show_topology())
-            show(model, axes=True, axes0=True, transparent=False)
-            model_class.export_to_step()
+            model = Model._models[self.args.model_name].variant(
+                self.args.variant_name
+            )
+            print(model.assembly.show_topology())
+            show(model.assembly, axes=True, axes0=True, transparent=False)
+            if self.args.dest:
+                model.export_to_step(self.args.dest)
         except KeyboardInterrupt:
             raise
         except Exception:
