@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.scripts]
-bdview = "monobd.watch:main"
+bdview = "monobd.utils.bdview:main"
 
 [tool.poetry]
 requires-poetry = ">=2.0"
