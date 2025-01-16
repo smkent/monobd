@@ -81,6 +81,17 @@ class Watcher:
             ),
         )
         ap.add_argument(
+            "--viewer-args",
+            "-A",
+            dest="ocp_viewer_args",
+            default="--theme=dark",
+            metavar="args",
+            help=(
+                "Additional arguments to provide to ocp_viewer"
+                " (default: %(default)s)"
+            ),
+        )
+        ap.add_argument(
             "target", help="Module to execute when changes detected"
         )
         return ap.parse_args()
@@ -93,7 +104,10 @@ class Watcher:
         try:
             print("Starting OCP viewer")
             url = f"http://localhost:{OCP_VIEWER_PORT}/viewer"
-            viewer_process = subprocess.Popen(["python", "-m", "ocp_vscode"])
+            viewer_process = subprocess.Popen(
+                ["python", "-m", "ocp_vscode"]
+                + self.args.ocp_viewer_args.split()
+            )
             for _ in range(100):
                 try:
                     urlopen(url).read()
