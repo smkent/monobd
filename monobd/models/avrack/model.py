@@ -6,9 +6,9 @@ from typing import Any
 
 from build123d import IN, Compound, Location
 
-from ...assets import asset
 from ...common import Model
 from . import constants
+from .assets import asset
 from .frame import RackFrame
 from .tray import RackTray
 
