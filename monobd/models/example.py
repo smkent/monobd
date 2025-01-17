@@ -4,31 +4,53 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import Any
 
-from build123d import Color, Compound, Location
+from build123d import (
+    Align,
+    Box,
+    BuildPart,
+    Color,
+    Compound,
+    Locations,
+    chamfer,
+    fillet,
+)
 
 from ..common import Model
-from ..parts.example import ExamplePart
 
 
 @dataclass
 class ExampleModel(Model, name="example"):
-    xoff: int = 20
+    height_factor: int = 1
 
     @classmethod
     def variants(cls) -> dict[str, dict[str, Any]]:
         return {
-            "default": {"xoff": 30},
-            "wider": {"xoff": 50},
+            "default": {},
+            "tall": {"height_factor": 2},
         }
 
     @cached_property
     def assembly(self) -> Compound:
-        bp = ExamplePart()
-        bp.label = "orange_box"
-        bp.color = Color(0xFF8822, alpha=0x99)
-        bp2 = ExamplePart().move(Location((self.xoff, 0, 0)))
-        bp2.label = "green_box"
-        bp2.color = Color(0x00CC22, alpha=0xCC)
+        with BuildPart() as p:
+            Box(
+                10,
+                20,
+                30 * self.height_factor,
+                align=(Align.CENTER, Align.CENTER, Align.MIN),
+            )
+            fillet(p.edges(), radius=2)
+        p.part.label = "orange_box"
+        p.part.color = Color(0xFF8822, alpha=0x99)
+        with BuildPart() as p2, Locations((10, 0, 0)):
+            Box(
+                10,
+                20,
+                20 * self.height_factor,
+                align=(Align.CENTER, Align.CENTER, Align.MIN),
+            )
+            chamfer(p2.edges(), length=2)
+        p2.part.label = "green_box"
+        p2.part.color = Color(0x00CC22, alpha=0xCC)
         return Compound(  # type: ignore
-            label=self.model_name, children=[bp, bp2]
+            label=self.model_name, children=[p.part, p2.part]
         )
