@@ -69,8 +69,7 @@ class ModelRenderer:
                     )
                     print(model.assembly.show_topology())
                     print("Exporting model")
-                    model.export_to_step(self.args.dest)
-                    print("")
+                    model.export(self.args.dest, step=True, stl=True)
         except KeyboardInterrupt:
             print("")
             raise
