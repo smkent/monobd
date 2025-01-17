@@ -50,11 +50,15 @@ class Model:
         return ".".join(path_parts)
 
     def export_to_step(self, dest: Path | None = None) -> None:
+        def _export_step(assembly: Compound, path: Path) -> None:
+            print(f"Exporting {path}")
+            export_step(assembly, path)
+
         dest = dest or Path(".")
         dest.mkdir(exist_ok=True)
         assembly_part_name = self._part_fq_name(self.assembly)
         if len(self.assembly.leaves) == 1:
-            export_step(self.assembly, dest / f"{assembly_part_name}.step")
+            _export_step(self.assembly, dest / f"{assembly_part_name}.step")
             return
         export_files = {f"{assembly_part_name}": self.assembly}
         for part in self.assembly.leaves:
@@ -63,4 +67,4 @@ class Model:
                 raise Exception(f"Duplicate part name {part_name}")
             export_files[part_name] = part
         for part_name, part in export_files.items():
-            export_step(part, dest / f"{part_name}.step")
+            _export_step(part, dest / f"{part_name}.step")
