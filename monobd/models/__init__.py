@@ -1,4 +1,4 @@
-from .avrack import Model as AVRack
+from .avrack import AVRack
 from .example import ExampleModel
 
 __all__ = ["AVRack", "ExampleModel"]

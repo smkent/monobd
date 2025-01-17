@@ -1,3 +1,3 @@
-from .model import Model
+from .model import AVRack
 
-__all__ = ["Model"]
+__all__ = ["AVRack"]
