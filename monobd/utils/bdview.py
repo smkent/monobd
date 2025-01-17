@@ -195,6 +195,7 @@ class Watcher:
                 import_module(
                     f"{current_module.models.__name__}.{self.args.model_name}"
                 )
+            print("Rendering model")
             model = Model._models[self.args.model_name].variant(
                 self.args.variant_name
             )
