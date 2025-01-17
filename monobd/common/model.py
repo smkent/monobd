@@ -26,7 +26,7 @@ class Model:
 
     @classmethod
     def variants(cls) -> dict[str, dict[str, Any]]:
-        raise NotImplementedError
+        return {}
 
     @classmethod
     def variant(cls, variant_name: str, default: bool = True) -> Model:
