@@ -202,7 +202,7 @@ class Watcher:
             print(model.assembly.show_topology())
             show(model.assembly, axes=True, axes0=True, transparent=False)
             if self.args.dest:
-                model.export_to_step(self.args.dest)
+                model.export(self.args.dest, step=True, stl=False)
         except KeyboardInterrupt:
             raise
         except Exception:

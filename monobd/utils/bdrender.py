@@ -13,13 +13,23 @@ class ModelRenderer:
     def args(self) -> Namespace:
         ap = ArgumentParser("Render monobd models")
         ap.add_argument(
-            "model_name", metavar="model", help="Model(s) to render"
+            "model_name",
+            nargs="?",
+            metavar="model",
+            help="Model(s) to render (default: do nothing)",
         )
         ap.add_argument(
             "variant_name",
             nargs="?",
             default="",
             help="Model variant name (default: all variants)",
+        )
+        ap.add_argument(
+            "-a",
+            "--all",
+            dest="render_all",
+            action="store_true",
+            help="Render all models",
         )
         ap.add_argument(
             "-d",
@@ -32,8 +42,14 @@ class ModelRenderer:
         )
         return ap.parse_args()
 
-    def render_variants(self) -> Iterator[Model]:
-        model_class = Model._models[self.args.model_name]
+    def render_models(self) -> Iterator[type[Model]]:
+        if self.args.model_name:
+            yield Model._models[self.args.model_name]
+            return
+        if self.args.render_all:
+            yield from Model._models.values()
+
+    def render_variants(self, model_class: type[Model]) -> Iterator[Model]:
         if self.args.variant_name:
             yield model_class.variant(self.args.variant_name, default=False)
             return
@@ -41,9 +57,19 @@ class ModelRenderer:
 
     def __call__(self) -> None:
         try:
-            for model in self.render_variants():
-                print(model.assembly.show_topology())
-                model.export_to_step(self.args.dest)
+            for model_class in self.render_models():
+                for model in self.render_variants(model_class):
+                    print(
+                        f"Rendering {model_class.__name__} model"
+                        + (
+                            f" variant {model.variant_name}"
+                            if model.variant_name
+                            else ""
+                        )
+                    )
+                    print(model.assembly.show_topology())
+                    print("Exporting model")
+                    model.export(self.args.dest, step=True, stl=True)
         except KeyboardInterrupt:
             print("")
             raise
