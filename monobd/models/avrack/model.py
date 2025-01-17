@@ -6,7 +6,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any
 
-from build123d import IN, Compound, Location
+from build123d import IN, Color, Compound, Location
 
 from ...common import Model
 from . import constants
@@ -71,6 +71,8 @@ class AVRack(Model, name="avrack"):
             ).move(Location((0, 0, -constants.THICKNESS)))
             for c in self.trays_config
         ]
+        for tray in trays:
+            tray.color = Color(0xAAAAAA, alpha=0xFF)
         for i, loc in enumerate(constants.TRAY_LOCATIONS):
             trays[i] = trays[i].move(Location(loc))
         for i in range(2, len(trays)):

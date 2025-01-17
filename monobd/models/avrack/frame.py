@@ -9,6 +9,7 @@ from build123d import (
     BasePartObject,
     BuildPart,
     BuildSketch,
+    Color,
     Compound,
     CounterBoreHole,
     GridLocations,
@@ -40,7 +41,9 @@ class RackMountWhichHalf(Enum):
 class RackFrame(Compound):
     def __init__(self, label: str = "frame") -> None:
         rm_left = RackFrameHalf(half=RackMountWhichHalf.LEFT)
+        rm_left.color = Color(0xDDDDDD, alpha=0xFF)
         rm_right = RackFrameHalf(half=RackMountWhichHalf.RIGHT)
+        rm_right.color = Color(0xDDDDDD, alpha=0xFF)
         super().__init__(  # type: ignore
             label=label, children=[rm_left, rm_right]
         )
