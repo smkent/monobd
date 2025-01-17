@@ -43,20 +43,24 @@ class Model:
         for variant_name, params in variants.items():
             yield cls(variant_name=variant_name, **params)
 
+    def _part_fq_name(self, part: Compound) -> str:
+        path_parts = [c.label for c in part.path]
+        if self.variant_name:
+            path_parts[0] += f"-{self.variant_name}"
+        return ".".join(path_parts)
+
     def export_to_step(self, dest: Path | None = None) -> None:
         dest = dest or Path(".")
         dest.mkdir(exist_ok=True)
-        prefix = f"{self.variant_name}-"
+        assembly_part_name = self._part_fq_name(self.assembly)
         if len(self.assembly.leaves) == 1:
-            export_step(
-                self.assembly, dest / f"{prefix}{self.assembly.label}.step"
-            )
+            export_step(self.assembly, dest / f"{assembly_part_name}.step")
             return
-        export_files = {f"{self.assembly.label}.all_parts": self.assembly}
+        export_files = {f"{assembly_part_name}": self.assembly}
         for part in self.assembly.leaves:
-            part_name = ".".join([c.label for c in part.path])
+            part_name = self._part_fq_name(part)
             if part_name in export_files:
                 raise Exception(f"Duplicate part name {part_name}")
             export_files[part_name] = part
         for part_name, part in export_files.items():
-            export_step(part, dest / f"{prefix}{part_name}.step")
+            export_step(part, dest / f"{part_name}.step")
