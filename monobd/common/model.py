@@ -29,7 +29,8 @@ class Model:
         return {}
 
     @classmethod
-    def variant(cls, variant_name: str, default: bool = True) -> Model:
+    def variant(cls, variant_name: str | None, default: bool = True) -> Model:
+        variant_name = variant_name or ""
         variants = cls.variants()
         if default and variant_name not in variants:
             return cls()
@@ -52,8 +53,10 @@ class Model:
             return ".".join(path_parts)
 
         assembly_part_name = _part_fq_name(self.assembly)
-        export_parts = {f"{assembly_part_name}": self.assembly}
-        if len(self.assembly.leaves) >= 1:
+        export_parts = {assembly_part_name: self.assembly}
+        if len(self.assembly.leaves) == 1:
+            export_parts[assembly_part_name] = self.assembly.leaves[0]
+        else:
             for part in self.assembly.leaves:
                 part_name = _part_fq_name(part)
                 if part_name in export_parts:
