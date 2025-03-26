@@ -51,6 +51,8 @@ class Watcher:
     def __call__(self) -> None:
         with self.ocp_viewer(), self.event_watcher():
             try:
+                time.sleep(1)
+                self.runner.trigger()
                 while True:
                     time.sleep(1000)
             except KeyboardInterrupt:
