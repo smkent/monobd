@@ -16,6 +16,7 @@ from typing import Any, Callable
 from urllib.error import URLError
 from urllib.request import urlopen
 
+import psutil
 from ocp_vscode import show  # type: ignore
 from ocp_vscode.comms import CMD_PORT as OCP_VIEWER_PORT  # type: ignore
 from watchdog.events import (
@@ -69,6 +70,20 @@ class Watcher:
             help="Don't run ocp_viewer",
         )
         ap.add_argument(
+            "--restart-viewer",
+            "-R",
+            dest="restart_viewer",
+            action="store_true",
+            help="Restart ocp_viewer if it is already running",
+        )
+        ap.add_argument(
+            "--stop-viewer",
+            "-S",
+            dest="stop_viewer_on_exit",
+            action="store_true",
+            help="Stop ocp_viewer on exit",
+        )
+        ap.add_argument(
             "--no-browser",
             "-B",
             dest="open_viewer",
@@ -118,17 +133,44 @@ class Watcher:
         )
         return ap.parse_args()
 
+    @cached_property
+    def ocp_viewer_process(self) -> psutil.Process | None:
+        return next(
+            iter(
+                psutil.Process(c.pid)
+                for c in psutil.net_connections()
+                if c.laddr
+                and c.laddr.port == OCP_VIEWER_PORT
+                and c.pid
+                and c.status.lower() == "listen"
+            ),
+            None,
+        )
+
     @contextmanager
     def ocp_viewer(self) -> Iterator[None]:
         if not self.args.viewer:
             yield
             return
+        url = f"http://localhost:{OCP_VIEWER_PORT}/viewer"
+        if self.ocp_viewer_process:
+            if not self.args.restart_viewer:
+                print(f"OCP viewer is already running: {url}")
+                yield
+                return
+            print(
+                "Stopping already running OCP viewer"
+                f" (PID {self.ocp_viewer_process.pid})"
+            )
+            self.ocp_viewer_process.terminate()
+            psutil.wait_procs([self.ocp_viewer_process], timeout=2)
+            del self.ocp_viewer_process
+        print("Starting OCP viewer")
         try:
-            print("Starting OCP viewer")
-            url = f"http://localhost:{OCP_VIEWER_PORT}/viewer"
-            viewer_process = subprocess.Popen(
+            subprocess.Popen(
                 ["python", "-m", "ocp_vscode"]
-                + self.args.ocp_viewer_args.split()
+                + self.args.ocp_viewer_args.split(),
+                start_new_session=True,
             )  # nosec B603
             for _ in range(100):
                 try:
@@ -143,9 +185,10 @@ class Watcher:
                 time.sleep(0.5)
             yield
         finally:
-            print("Stopping OCP viewer")
-            viewer_process.kill()
-            viewer_process.communicate()
+            if self.args.stop_viewer_on_exit and self.ocp_viewer_process:
+                print("Stopping OCP viewer")
+                self.ocp_viewer_process.terminate()
+                psutil.wait_procs([self.ocp_viewer_process], timeout=2)
 
     @contextmanager
     def event_watcher(self) -> Iterator[None]:
@@ -227,7 +270,6 @@ class Runner(Thread):
 
     def run(self) -> None:
         with self.condition:
-            self.run_callback()
             while True:
                 timeout = None
                 tm = time.time()
