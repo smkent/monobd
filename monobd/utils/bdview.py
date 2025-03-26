@@ -7,9 +7,9 @@ import traceback
 import webbrowser
 from argparse import ArgumentParser, Namespace
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from functools import cached_property
-from importlib import import_module, reload
+from importlib import reload
 from pathlib import Path
 from threading import Condition, Event, Thread
 from typing import Any, Callable
@@ -51,6 +51,8 @@ class Watcher:
     def __call__(self) -> None:
         with self.ocp_viewer(), self.event_watcher():
             try:
+                time.sleep(1)
+                self.runner.trigger()
                 while True:
                     time.sleep(1000)
             except KeyboardInterrupt:
@@ -160,8 +162,10 @@ class Watcher:
             print("Stopping event watcher")
             self.runner.stop()
             observer.stop()
-            observer.join()
-            self.runner.join()
+            with suppress(RuntimeError):
+                observer.join()
+            with suppress(RuntimeError):
+                self.runner.join()
 
     @cached_property
     def condition(self) -> Condition:
@@ -181,7 +185,6 @@ class Watcher:
     def run_callback(self) -> None:
         try:
             mn = __name__.split(".")[0]
-            current_module = sys.modules[mn]
             for mod in [
                 p
                 for m, p in sys.modules.items()
@@ -191,10 +194,6 @@ class Watcher:
                     reload(mod)
                 except ModuleNotFoundError:
                     traceback.print_exc()
-            if not hasattr(current_module.models, self.args.model_name):
-                import_module(
-                    f"{current_module.models.__name__}.{self.args.model_name}"
-                )
             print("Rendering model")
             model = Model._models[self.args.model_name].variant(
                 self.args.variant_name
