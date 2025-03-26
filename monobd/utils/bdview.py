@@ -7,7 +7,7 @@ import traceback
 import webbrowser
 from argparse import ArgumentParser, Namespace
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from functools import cached_property
 from importlib import import_module, reload
 from pathlib import Path
@@ -160,8 +160,10 @@ class Watcher:
             print("Stopping event watcher")
             self.runner.stop()
             observer.stop()
-            observer.join()
-            self.runner.join()
+            with suppress(RuntimeError):
+                observer.join()
+            with suppress(RuntimeError):
+                self.runner.join()
 
     @cached_property
     def condition(self) -> Condition:
