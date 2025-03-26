@@ -168,9 +168,6 @@ class ScrewHandle(Model, name="screw_handle"):
                         kwargs["counter_sink_angle"] = (
                             self.screw_hole_countersink_angle
                         )
-                    print(
-                        "MORE ANGLE", kwargs, self.screw_hole_countersink_angle
-                    )
                     CounterSinkHole(
                         radius=self.screw_size / 2,
                         counter_sink_radius=self.screw_size,
