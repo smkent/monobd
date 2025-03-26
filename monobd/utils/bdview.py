@@ -9,7 +9,7 @@ from argparse import ArgumentParser, Namespace
 from collections.abc import Iterator
 from contextlib import contextmanager, suppress
 from functools import cached_property
-from importlib import import_module, reload
+from importlib import reload
 from pathlib import Path
 from threading import Condition, Event, Thread
 from typing import Any, Callable
@@ -185,7 +185,6 @@ class Watcher:
     def run_callback(self) -> None:
         try:
             mn = __name__.split(".")[0]
-            current_module = sys.modules[mn]
             for mod in [
                 p
                 for m, p in sys.modules.items()
@@ -195,10 +194,6 @@ class Watcher:
                     reload(mod)
                 except ModuleNotFoundError:
                     traceback.print_exc()
-            if not hasattr(current_module.models, self.args.model_name):
-                import_module(
-                    f"{current_module.models.__name__}.{self.args.model_name}"
-                )
             print("Rendering model")
             model = Model._models[self.args.model_name].variant(
                 self.args.variant_name
