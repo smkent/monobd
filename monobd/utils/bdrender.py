@@ -11,7 +11,7 @@ from ..common import Model
 class ModelRenderer:
     @cached_property
     def args(self) -> Namespace:
-        ap = ArgumentParser("Render monobd models")
+        ap = ArgumentParser(description="Render monobd models")
         ap.add_argument(
             "model_name",
             nargs="?",

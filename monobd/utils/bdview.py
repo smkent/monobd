@@ -67,7 +67,9 @@ class Watcher:
 
     @cached_property
     def args(self) -> Namespace:
-        ap = ArgumentParser("Model automatic renderer for development")
+        ap = ArgumentParser(
+            description="Model automatic renderer for development"
+        )
         ap.add_argument(
             "--no-viewer",
             "-N",
