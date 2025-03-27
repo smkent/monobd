@@ -6,12 +6,15 @@ import time
 import traceback
 import webbrowser
 from argparse import ArgumentParser, Namespace
+from collections import OrderedDict
 from collections.abc import Iterator
 from contextlib import contextmanager, suppress
+from dataclasses import dataclass, field
 from functools import cached_property
 from importlib import reload
 from pathlib import Path
 from threading import Condition, Event, Thread
+from types import ModuleType
 from typing import Any, Callable
 from urllib.error import URLError
 from urllib.request import urlopen
@@ -31,7 +34,10 @@ from watchdog.observers import Observer
 from ..common import Model
 
 
+@dataclass
 class Watcher:
+    modules: OrderedDict[str, ModuleType] = field(default_factory=OrderedDict)
+
     class EventHandler(PatternMatchingEventHandler):
         def __init__(
             self, callback: Callable[[], None], *args: Any, **kwargs: Any
@@ -225,18 +231,23 @@ class Watcher:
         _runner.start()
         return _runner
 
+    def reload_modules(self) -> None:
+        mn = __name__.split(".")[0]
+        for m, p in sys.modules.items():
+            if not (m == mn or m.startswith(f"{mn}.")):
+                continue
+            if m not in self.modules:
+                self.modules[m] = p
+        print("Reloading imports")
+        for mod in self.modules.values():
+            try:
+                reload(mod)
+            except ModuleNotFoundError:
+                traceback.print_exc()
+
     def run_callback(self) -> None:
         try:
-            mn = __name__.split(".")[0]
-            for mod in [
-                p
-                for m, p in sys.modules.items()
-                if m == mn or m.startswith(f"{mn}.")
-            ]:
-                try:
-                    reload(mod)
-                except ModuleNotFoundError:
-                    traceback.print_exc()
+            self.reload_modules()
             print("Rendering model")
             model = Model._models[self.args.model_name].variant(
                 self.args.variant_name
