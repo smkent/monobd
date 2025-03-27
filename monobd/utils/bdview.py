@@ -114,7 +114,7 @@ class Watcher:
             "--viewer-args",
             "-A",
             dest="ocp_viewer_args",
-            default="--theme=dark",
+            default="--theme=dark --reset_camera=keep",
             metavar="args",
             help=(
                 "Additional arguments to provide to ocp_viewer"
