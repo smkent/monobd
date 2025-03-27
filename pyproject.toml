@@ -20,6 +20,7 @@ dynamic = [ "version" ]
 dependencies = [
     "build123d (>=0.8.0,<0.9.0)",
     "cadquery (>=2.5.2,<3.0.0)",
+    "psutil (>=7.0.0,<8.0.0)",
 ]
 
 [project.scripts]
@@ -50,6 +51,7 @@ pytest = "*"
 pytest-cov = "*"
 pytest-github-actions-annotate-failures = "*"
 pytest-sugar = "*"
+types-psutil = "^7.0.0.20250218"
 watchdog = "^6.0.0"
 ocp-vscode = "^2.6.1"
 
