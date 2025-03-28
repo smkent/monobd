@@ -211,6 +211,4 @@ class PoopBagDispenserWallMount(Model, name="poop_bag_dispenser_wall_mount"):
                 )
         p.part.label = "dispenser"
         p.part.color = Color(0x33CC66, alpha=0xCC)
-        return Compound(  # type: ignore
-            label=self.model_name, children=[p.part]
-        )
+        return Compound(label=self.model_name, children=[p.part])

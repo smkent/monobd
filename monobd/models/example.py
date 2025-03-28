@@ -51,6 +51,4 @@ class ExampleModel(Model, name="example"):
             chamfer(p2.edges(), length=2)
         p2.part.label = "green_box"
         p2.part.color = Color(0x00CC22, alpha=0xCC)
-        return Compound(  # type: ignore
-            label=self.model_name, children=[p.part, p2.part]
-        )
+        return Compound(label=self.model_name, children=[p.part, p2.part])

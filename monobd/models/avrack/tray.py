@@ -309,6 +309,4 @@ class RackTray(Compound):
                 align=(Align.CENTER, Align.CENTER, Align.MAX),
             )
         back.part.label = "back"
-        super().__init__(  # type: ignore
-            label=label, children=[body.part, back.part]
-        )
+        super().__init__(label=label, children=[body.part, back.part])

@@ -19,9 +19,7 @@ class SimpleTestModel(Model, name="testmodel"):
         with BuildPart() as p:
             Box(10, 20, 30)
         p.part.label = "box"
-        return Compound(  # type: ignore
-            label=self.model_name, children=[p.part]
-        )
+        return Compound(label=self.model_name, children=[p.part])
 
 
 @dataclass
@@ -41,9 +39,7 @@ class VariantTestModel(Model, name="variantmodel"):
         with BuildPart() as p:
             Box(self.size, self.size * 2, self.size * 3)
         p.part.label = "box"
-        return Compound(  # type: ignore
-            label=self.model_name, children=[p.part]
-        )
+        return Compound(label=self.model_name, children=[p.part])
 
 
 @pytest.fixture

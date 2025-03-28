@@ -183,6 +183,4 @@ class ScrewHandle(Model, name="screw_handle"):
                     )
         p.part.label = "handle"
         p.part.color = Color(0x00BBFF, alpha=0xCC)
-        return Compound(  # type: ignore
-            label=self.model_name, children=[p.part]
-        )
+        return Compound(label=self.model_name, children=[p.part])
