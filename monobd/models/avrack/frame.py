@@ -60,9 +60,14 @@ class RackHoles(BasePartObject):
         mode: Mode = Mode.SUBTRACT,
         depth: float | None = None,
     ):
-        context: BuildPart = BuildPart._get_context(self)
+        context: BuildPart | None = BuildPart._get_context(self)
         validate_inputs(context, self)
-        hole_depth = depth * 2 if depth is not None else context.max_dimension
+        if depth is not None:
+            hole_depth = depth * 2
+        elif depth is None and context is not None:
+            hole_depth = context.max_dimension
+        else:
+            raise ValueError("No depth provided")
         with BuildPart() as p:
             all_u = [(0, uu * constants.U) for uu in range(0, u)]
             per_u = [(0, y) for y in (0, 5 / 8 * IN, -5 / 8 * IN)]

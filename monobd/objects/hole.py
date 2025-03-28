@@ -29,10 +29,12 @@ class PrintableCounterBoreHole(BasePartObject):
         ),
         mode: Mode = Mode.SUBTRACT,
     ):
-        context: BuildPart = BuildPart._get_context(self)
+        context: BuildPart | None = BuildPart._get_context(self)
         validate_inputs(context, self)
-        if depth is None:
+        if depth is None and context is not None:
             depth = context.max_dimension
+        else:
+            raise ValueError("No depth provided")
         with BuildPart() as p:
             CounterBoreHole(
                 radius=radius,
