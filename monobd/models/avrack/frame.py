@@ -44,9 +44,7 @@ class RackFrame(Compound):
         rm_left.color = Color(0xDDDDDD, alpha=0xFF)
         rm_right = RackFrameHalf(half=RackMountWhichHalf.RIGHT)
         rm_right.color = Color(0xDDDDDD, alpha=0xFF)
-        super().__init__(  # type: ignore
-            label=label, children=[rm_left, rm_right]
-        )
+        super().__init__(label=label, children=[rm_left, rm_right])
 
 
 class RackHoles(BasePartObject):

@@ -77,9 +77,7 @@ class AVRack(Model, name="avrack"):
             trays[i] = trays[i].move(Location(loc))
         for i in range(2, len(trays)):
             trays[i] = trays[i].move(Location((0, constants.U * (i - 1), 0)))
-        trays_assembly = Compound(  # type: ignore
-            label="trays", children=trays
-        )
-        return Compound(  # type: ignore
+        trays_assembly = Compound(label="trays", children=trays)
+        return Compound(
             label=self.model_name, children=[frame, trays_assembly]
         )
