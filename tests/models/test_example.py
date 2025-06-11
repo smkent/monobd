@@ -1,7 +1,9 @@
 import pytest
 from pytest import approx
 
-from monobd.models import ExampleModel
+from monobd import MODELS
+
+ExampleModel = MODELS.get_model("example")
 
 
 @pytest.mark.parametrize(

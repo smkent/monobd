@@ -11,14 +11,12 @@ from build123d import Compound, export_step, export_stl
 
 @dataclass
 class Model:
-    _models: ClassVar[dict[str, type[Model]]] = {}
     model_name: ClassVar[str] = ""
     variant_name: str = ""
 
     def __init_subclass__(cls, name: str, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
         cls.model_name = name
-        cls._models[name] = cls
 
     @cached_property
     def assembly(self) -> Compound:

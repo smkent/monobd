@@ -31,7 +31,7 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from ..common import Model
+from .. import MODELS
 
 
 @dataclass
@@ -251,7 +251,7 @@ class Watcher:
         try:
             self.reload_modules()
             print("Rendering model")
-            model = Model._models[self.args.model_name].variant(
+            model = MODELS.get_model(self.args.model_name).variant(
                 self.args.variant_name
             )
             print(model.assembly.show_topology())
