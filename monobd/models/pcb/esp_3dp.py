@@ -222,7 +222,7 @@ class BaseCutout(BasePartObject):
 
 
 @dataclass
-class ESP3DP(Model, PCBGrid, name="esp-3dp"):
+class ESP3DP(Model, PCBGrid, name="esp_3dp"):
     screw_hole_d: float = 4.5
     base_thickness: float = 2.6
     pylon_height: float = 6

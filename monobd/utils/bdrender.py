@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from functools import cached_property
 from pathlib import Path
 
+from .. import MODELS
 from ..common import Model
 
 
@@ -44,10 +45,11 @@ class ModelRenderer:
 
     def render_models(self) -> Iterator[type[Model]]:
         if self.args.model_name:
-            yield Model._models[self.args.model_name]
+            yield MODELS.get_model(self.args.model_name)
             return
         if self.args.render_all:
-            yield from Model._models.values()
+            for model_name in MODELS.keys():
+                yield MODELS.get_model(model_name)
 
     def render_variants(self, model_class: type[Model]) -> Iterator[Model]:
         if self.args.variant_name:
