@@ -5,6 +5,7 @@ MODELS = ModelRegistry(
     {
         "avrack": "monobd.models.avrack.model.AVRack",
         "example": "monobd.models.example.ExampleModel",
+        "emt_extension": "monobd.models.emt.EMTExtension",
         "poop_bag_dispenser_wall_mount": (
             "monobd.models.dog.PoopBagDispenserWallMount"
         ),
