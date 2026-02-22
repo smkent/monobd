@@ -71,9 +71,14 @@ class BodyHalf(BasePartObject):
                         height - Const.thread_height - Const.thickness * 1,
                         align=(Align.CENTER, Align.CENTER, Align.MIN),
                     )
+                last_edges = p2_sub.edges(Select.LAST)
                 fillet(
-                    p2_sub.edges(Select.LAST).group_by(Axis.Z)[-1],
+                    last_edges.group_by(Axis.Z)[-1],
                     Const.base_height / 3 - Const.thickness * 1,
+                )
+                chamfer(
+                    last_edges.group_by(Axis.Z)[0],
+                    Const.thread_inset / 2 / 2,
                 )
 
             Cylinder(
@@ -103,7 +108,7 @@ class BodyHalf(BasePartObject):
                 / 2,
                 apex_width=2 * MM + Const.thread_clearance,
                 root_width=4 * MM + Const.thread_clearance,
-                length=Const.thread_height * 4,
+                length=Const.thread_height * 2,
                 end_finishes=("raw", "raw"),
                 align=(Align.CENTER, Align.CENTER, Align.CENTER),
                 mode=Mode.SUBTRACT,
