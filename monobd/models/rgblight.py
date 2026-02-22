@@ -259,7 +259,7 @@ class RGBLight(Model):
                 (
                     0,
                     -Const.diameter / 2,
-                    Const.thickness + 10 * MM + (1.6 + 1.5) * MM,
+                    Const.thickness + 10 * MM + (1.6 + 1.5 - 2) * MM,
                 )
             ):
                 USBPortCutout(
