@@ -155,7 +155,7 @@ class FixtureInsert(BasePartObject):
                     - Const.thickness * 2
                 )
                 Circle(
-                    (Const.led_mount_diameter) / 2 + Const.thickness,
+                    (Const.led_mount_diameter) / 2 + Const.thickness * 2,
                     mode=Mode.SUBTRACT,
                 )
                 Rectangle(
@@ -165,6 +165,10 @@ class FixtureInsert(BasePartObject):
                 )
                 fillet(sk.vertices(), Const.thickness)
             extrude(amount=Const.thread_height * 2, mode=Mode.SUBTRACT)
+            chamfer(
+                p.edges(Select.LAST).group_by(Axis.Z)[:],
+                Const.thickness,
+            )
 
             with Locations((0, 0, Const.thread_height)):
                 Cylinder(
