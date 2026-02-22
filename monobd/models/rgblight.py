@@ -14,9 +14,11 @@ from build123d import (
     Color,
     Compound,
     Cylinder,
+    GridLocations,
     Location,
     Locations,
     Mode,
+    Plane,
     Rectangle,
     RotationLike,
     Select,
@@ -27,7 +29,7 @@ from build123d import (
 
 
 class Const:
-    diameter: float = 2 * IN
+    diameter: float = 2.5 * IN
     base_height = 1 * IN
     thickness: float = 1.6 * MM
     led_mount_diameter = 0.5 * IN
@@ -132,7 +134,7 @@ class FixtureInsert(BasePartObject):
             )
             Thread(
                 apex_radius=(Const.diameter - Const.thread_inset / 2) / 2,
-                root_radius=(Const.diameter - Const.thread_inset) / 2,
+                root_radius=(Const.diameter - Const.thread_inset - 0.01) / 2,
                 length=Const.thread_height * 2,
                 apex_width=2 * MM,
                 root_width=4 * MM,
@@ -175,6 +177,30 @@ class FixtureInsert(BasePartObject):
         )
 
 
+class USBPortCutout(BasePartObject):
+    def __init__(
+        self,
+        width: float = 15 * MM,
+        height: float = 8 * MM,
+        curve: float = 2 * MM,
+        rotation: RotationLike = (90, 0, 0),
+        align: tuple[Align, Align, Align] = (
+            Align.CENTER,
+            Align.CENTER,
+            Align.CENTER,
+        ),
+        mode: Mode = Mode.SUBTRACT,
+    ) -> None:
+        with BuildPart() as p:
+            with BuildSketch(Plane.XY.offset(Const.diameter / 2)) as sk:
+                Rectangle(width, height)
+                fillet(sk.vertices(), curve)
+            extrude(amount=-Const.thickness * 3)
+        super().__init__(
+            part=p.part, rotation=rotation, align=align, mode=mode
+        )
+
+
 class RGBLight(Model):
     def build(self) -> Compound:
         with BuildPart() as fixture_base:
@@ -183,6 +209,58 @@ class RGBLight(Model):
                 rotation=(180, 0, 0),
                 align=(Align.CENTER, Align.CENTER, Align.MAX),
             )
+
+            # PCB mount
+            with BuildPart():
+                with BuildSketch() as sk:
+                    Rectangle(Const.diameter * 2, Const.diameter * 2)
+                    Rectangle(Const.diameter * 2, 20, mode=Mode.SUBTRACT)
+                    Rectangle(20, Const.diameter * 2, mode=Mode.SUBTRACT)
+                    fillet(sk.vertices(), 6 * MM)
+                extrude(amount=10 * MM)
+                with BuildSketch(), GridLocations(32 - 3, 32 - 3, 2, 2):
+                    Circle(4.5 * MM / 2)
+                extrude(amount=10 * MM, mode=Mode.SUBTRACT)
+                with BuildPart(mode=Mode.INTERSECT) as p_int:
+                    Cylinder(
+                        Const.diameter / 2,
+                        Const.base_height,
+                        align=(Align.CENTER, Align.CENTER, Align.MIN),
+                    )
+                    fillet(
+                        p_int.edges(Select.LAST).group_by(Axis.Z)[0],
+                        Const.base_height / 3,
+                    )
+            chamfer(fixture_base.edges(Select.LAST).group_by(Axis.Z)[:], 0.6)
+
+            # USB port
+            with Locations(
+                (
+                    0,
+                    Const.diameter / 2,
+                    Const.thickness + 10 * MM + -(1 + 2.5) * MM,
+                )
+            ):
+                USBPortCutout(
+                    mode=Mode.SUBTRACT,
+                    align=(Align.CENTER, Align.CENTER, Align.MIN),
+                )
+            # Ambient light sensor
+            with Locations(
+                (
+                    0,
+                    -Const.diameter / 2,
+                    Const.thickness + 10 * MM + (1.6 + 1.5) * MM,
+                )
+            ):
+                USBPortCutout(
+                    8,
+                    4,
+                    1,
+                    mode=Mode.SUBTRACT,
+                    align=(Align.CENTER, Align.CENTER, Align.MAX),
+                )
+
         fixture_base.part.label = "base"
         fixture_base.part.color = Color(0x11AACC, alpha=0xCC)
 
