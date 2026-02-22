@@ -37,7 +37,7 @@ class Const:
 
     thread_inset = 0.5 * IN
     thread_height = 0.25 * IN
-    thread_clearance = 0.6 * MM  # 0.25 * MM
+    thread_clearance = 0.6 * MM
     thread_pitch = 6 * MM
 
 
