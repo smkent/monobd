@@ -29,22 +29,14 @@ from build123d import (
 class Const:
     diameter: float = 2 * IN
     base_height = 1 * IN
+    thickness: float = 1.6 * MM
     led_mount_diameter = 0.5 * IN
     led_mount_height = 2 * IN
 
     thread_inset = 0.5 * IN
     thread_height = 0.25 * IN
-    thread_clearance = 2  # 0.25 * MM
-
-    thickness: float = 1.6 * MM
-
-    thread_args = {  # noqa: RUF012
-        "apex_width": 2,
-        "root_width": 4,
-        "pitch": 8,
-        "end_finishes": ["chamfer", "chamfer"],
-        "align": (Align.CENTER, Align.CENTER, Align.MIN),
-    }
+    thread_clearance = 0.6 * MM  # 0.25 * MM
+    thread_pitch = 6 * MM
 
 
 class BodyHalf(BasePartObject):
@@ -95,16 +87,25 @@ class BodyHalf(BasePartObject):
                 align=(Align.CENTER, Align.CENTER, Align.MIN),
             )
             Thread(
-                apex_radius=(Const.diameter - Const.thread_inset / 2) / 2,
+                apex_radius=(
+                    Const.diameter
+                    - Const.thread_inset / 2
+                    + Const.thread_clearance
+                )
+                / 2,
                 root_radius=(
                     Const.diameter
                     - Const.thread_inset
                     + Const.thread_clearance
                 )
                 / 2,
-                length=Const.thread_height,
+                apex_width=2 * MM + Const.thread_clearance,
+                root_width=4 * MM + Const.thread_clearance,
+                length=Const.thread_height * 4,
+                end_finishes=("raw", "raw"),
+                align=(Align.CENTER, Align.CENTER, Align.CENTER),
                 mode=Mode.SUBTRACT,
-                **Const.thread_args,  # ty: ignore[invalid-argument-type]
+                pitch=Const.thread_pitch,
             )
 
         super().__init__(
@@ -133,8 +134,12 @@ class FixtureInsert(BasePartObject):
                 apex_radius=(Const.diameter - Const.thread_inset / 2) / 2,
                 root_radius=(Const.diameter - Const.thread_inset) / 2,
                 length=Const.thread_height * 2,
+                apex_width=2 * MM,
+                root_width=4 * MM,
+                end_finishes=("chamfer", "chamfer"),
+                align=(Align.CENTER, Align.CENTER, Align.MIN),
                 mode=Mode.ADD,
-                **Const.thread_args,  # ty: ignore[invalid-argument-type]
+                pitch=Const.thread_pitch,
             )
 
             with BuildSketch() as sk:
@@ -175,7 +180,7 @@ class RGBLight(Model):
         with BuildPart() as fixture_base:
             BodyHalf(
                 height=Const.base_height,
-                rotation=(0, 180, 0),
+                rotation=(180, 0, 0),
                 align=(Align.CENTER, Align.CENTER, Align.MAX),
             )
         fixture_base.part.label = "base"
