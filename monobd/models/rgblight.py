@@ -223,11 +223,11 @@ class RGBLight(Model):
             with BuildPart():
                 with BuildSketch() as sk:
                     Rectangle(Const.diameter * 2, Const.diameter * 2)
-                    Rectangle(Const.diameter * 2, 20, mode=Mode.SUBTRACT)
-                    Rectangle(20, Const.diameter * 2, mode=Mode.SUBTRACT)
+                    Rectangle(Const.diameter * 2, 19, mode=Mode.SUBTRACT)
+                    Rectangle(19, Const.diameter * 2, mode=Mode.SUBTRACT)
                     fillet(sk.vertices(), 3 * MM)
                 extrude(amount=10 * MM)
-                with BuildSketch(), GridLocations(32 - 5, 32 - 5, 2, 2):
+                with BuildSketch(), GridLocations(32 - 6, 32 - 6, 2, 2):
                     Circle(4.5 * MM / 2)
                 extrude(amount=10 * MM, mode=Mode.SUBTRACT)
                 with BuildPart(mode=Mode.INTERSECT) as p_int:
