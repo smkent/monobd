@@ -15,7 +15,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10,<3.14"
 dynamic = [ "version" ]
 dependencies = [
     "build123d (>=0.9.0,<0.10.0)",
@@ -37,24 +37,18 @@ poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
 
 [tool.poetry.group.dev.dependencies]
 bandit = {extras = ["toml"], version = "*"}
-black = "*"
 cruft = "*"
-flake8 = "*"
-flake8-bugbear = "*"
-flake8-pyproject = "*"
-flake8-simplify = "*"
-isort = "*"
 mypy = "*"
-pep8-naming = "*"
+ocp-vscode = "^2.6.1"
 poethepoet = "*"
 pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-github-actions-annotate-failures = "*"
 pytest-sugar = "*"
+ruff = "*"
 types-psutil = "^7.0.0.20250218"
 watchdog = "^6.0.0"
-ocp-vscode = "^2.6.1"
 
 [tool.poetry-dynamic-versioning]
 enable = true
@@ -76,9 +70,6 @@ help = "Run all tests"
 [tool.bandit]
 skips = ["B101"]  # assert_used
 
-[tool.black]
-line-length = 79
-
 [tool.coverage.run]
 source = ["monobd"]
 
@@ -88,14 +79,6 @@ show_missing = true
 
 [tool.cruft]
 skip = [".git"]
-
-[tool.flake8]
-exclude = "./.*"
-
-[tool.isort]
-atomic = true
-profile = "black"
-line_length = 79
 
 [tool.mypy]
 files = [ "tests", "monobd" ]
@@ -107,13 +90,41 @@ warn_return_any = true
 show_error_codes = true
 warn_unused_ignores = true
 
-[tool.pytest.ini_options]
-addopts = """\
-    --cov \
-    --cov-append \
-    --cov-report term \
-    --cov-report xml:.pytest_coverage.xml \
-    --junitxml=.pytest_results.xml \
-"""
+[tool.pytest]
+testpaths = ['tests']
+addopts = [
+    "--cov",
+    "--cov-append",
+    "--cov-report=term",
+    "--cov-report=xml:.pytest_coverage.xml",
+    "--junitxml=.pytest_results.xml",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 79
+fix = true
+
+exclude = [
+  ".git",
+  ".venv",
+  "__pycache__",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = [
+  "E", "W",     # pycodestyle
+  "F",          # pyflakes
+  "I",          # isort
+  "B",          # bugbear
+  "SIM",        # flake8-simplify
+  "N",          # pep8-naming
+  "UP",         # pyupgrade
+]
 
 # vim: ft=cfg
