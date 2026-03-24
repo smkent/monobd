@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Any
+from typing import Any, cast
 
-import qrcode as qrcode_lib
+import qrcode as qrcode_lib  # type: ignore[import-untyped]
 from build123d import (
     Align,
     Axis,
@@ -90,7 +90,7 @@ class QRCode(Model, name="qr_code"):
         )
         qr.add_data(self.text)
         qr.make(fit=True)
-        return qr.get_matrix()
+        return cast(list[list[bool]], qr.get_matrix())
 
     @cached_property
     def assembly(self) -> Compound:
@@ -137,7 +137,7 @@ class QRCode(Model, name="qr_code"):
             )
 
         # Collect module centers and free-corner rounding positions.
-        # For each corner: (row_delta_for_neighbor1, col_delta, row_delta2, col_delta2,
+        # For each corner: (row_delta1, col_delta1, row_delta2, col_delta2,
         #                    x_sign, y_sign)
         # x_sign/y_sign: -1 = left/bottom edge, +1 = right/top edge
         _corner_defs = [

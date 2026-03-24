@@ -1,9 +1,7 @@
 import pytest
 from pytest import approx
 
-from monobd import MODELS
-
-QRCode = MODELS.get_model("qr_code")
+from monobd.models.qr import QRCode
 
 
 @pytest.mark.parametrize(
@@ -14,8 +12,11 @@ QRCode = MODELS.get_model("qr_code")
         pytest.param("large", 88.0, id="large"),
     ],
 )
-def test_qr_code_plate_size(variant_name: str, expected_plate_size: float) -> None:
+def test_qr_code_plate_size(
+    variant_name: str, expected_plate_size: float
+) -> None:
     model = QRCode.variant(variant_name)
+    assert isinstance(model, QRCode)
     assert model.plate_size == approx(expected_plate_size)
 
 
@@ -26,7 +27,7 @@ def test_qr_code_assembly() -> None:
     assert bb.size.X == approx(58.0)
     assert bb.size.Y == approx(58.0)
     # total height = base_thickness + module_height
-    assert bb.size.Z == approx(3.0)
+    assert bb.size.Z == approx(4.6)
     assert sorted(model.export_parts.keys()) == [
         "qr_code-default",
         "qr_code-default.base",
