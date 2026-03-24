@@ -65,8 +65,7 @@ class QRCode(Model, name="qr_code"):
         n = len(matrix)
         module_size = self.size / n
 
-        with BuildPart() as p:
-            # Base plate
+        with BuildPart() as p_base:
             Box(
                 self.plate_size,
                 self.plate_size,
@@ -74,15 +73,17 @@ class QRCode(Model, name="qr_code"):
                 align=(Align.CENTER, Align.CENTER, Align.MIN),
             )
             chamfer(
-                p.edges().filter_by(Plane.XY).group_by(Axis.Z)[-1],
+                p_base.edges().filter_by(Plane.XY).group_by(Axis.Z)[-1],
                 self.edge_chamfer,
             )
             chamfer(
-                p.edges().filter_by(Plane.XY).group_by(Axis.Z)[0],
+                p_base.edges().filter_by(Plane.XY).group_by(Axis.Z)[0],
                 self.edge_chamfer,
             )
+        p_base.part.label = "base"
+        p_base.part.color = Color(0xFFFFFF, alpha=0xFF)
 
-            # Raised QR modules on top of the base plate
+        with BuildPart() as p_modules:
             with BuildSketch(Plane.XY.offset(self.base_thickness)):
                 for row in range(n):
                     for col in range(n):
@@ -92,13 +93,12 @@ class QRCode(Model, name="qr_code"):
                         x = (col - n / 2 + 0.5) * module_size
                         y = (n / 2 - row - 0.5) * module_size
                         with Locations((x, y)):
-                            Rectangle(
-                                module_size,
-                                module_size,
-                                mode=Mode.ADD,
-                            )
+                            Rectangle(module_size, module_size, mode=Mode.ADD)
             extrude(amount=self.module_height)
+        p_modules.part.label = "modules"
+        p_modules.part.color = Color(0x111111, alpha=0xFF)
 
-        p.part.label = "base"
-        p.part.color = Color(0x333333, alpha=0xFF)
-        return Compound(label=self.model_name, children=[p.part])
+        return Compound(
+            label=self.model_name,
+            children=[p_base.part, p_modules.part],
+        )

@@ -21,9 +21,14 @@ def test_qr_code_plate_size(variant_name: str, expected_plate_size: float) -> No
 
 def test_qr_code_assembly() -> None:
     model = QRCode.variant("default")
-    assert len(model.assembly.leaves) == 1
+    assert len(model.assembly.leaves) == 2
     bb = model.assembly.bounding_box()
     assert bb.size.X == approx(58.0)
     assert bb.size.Y == approx(58.0)
     # total height = base_thickness + module_height
     assert bb.size.Z == approx(3.0)
+    assert sorted(model.export_parts.keys()) == [
+        "qr_code-default",
+        "qr_code-default.base",
+        "qr_code-default.modules",
+    ]
