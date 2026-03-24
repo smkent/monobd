@@ -16,13 +16,14 @@ from build123d import (
     Locations,
     Mode,
     Plane,
-    Rectangle,
+    RectangleRounded,
     chamfer,
     extrude,
 )
 
 from ...common import Model
 
+_FINDER_SIZE = 7  # finder patterns are always 7x7 modules
 _DEFAULT_TEXT = "https://github.com/smkent/monobd"
 
 
@@ -39,6 +40,18 @@ class QRCode(Model, name="qr_code"):
     # Quiet-zone border around the QR code area (mm)
     border: float = 4.0
     edge_chamfer: float = 0.8
+    # Rounding applied to module corners and finder pattern corners,
+    # as a fraction of module size (0 = square, 0.5 = fully rounded ends)
+    corner_radius_ratio: float = 0.25
+
+    @staticmethod
+    def _finder_cell_set(n: int) -> set[tuple[int, int]]:
+        cells: set[tuple[int, int]] = set()
+        for fr, fc in [(0, 0), (0, n - _FINDER_SIZE), (n - _FINDER_SIZE, 0)]:
+            for dr in range(_FINDER_SIZE):
+                for dc in range(_FINDER_SIZE):
+                    cells.add((fr + dr, fc + dc))
+        return cells
 
     @classmethod
     def variants(cls) -> dict[str, dict[str, Any]]:
@@ -83,17 +96,49 @@ class QRCode(Model, name="qr_code"):
         p_base.part.label = "base"
         p_base.part.color = Color(0xFFFFFF, alpha=0xFF)
 
+        radius = module_size * self.corner_radius_ratio
+        finder_cells = self._finder_cell_set(n)
+
         with BuildPart() as p_modules:
             with BuildSketch(Plane.XY.offset(self.base_thickness)):
+                # Regular dark modules (skip finder pattern cells)
                 for row in range(n):
                     for col in range(n):
-                        if not matrix[row][col]:
+                        if not matrix[row][col] or (row, col) in finder_cells:
                             continue
-                        # matrix row 0 is the top of the QR code; col 0 is left
                         x = (col - n / 2 + 0.5) * module_size
                         y = (n / 2 - row - 0.5) * module_size
                         with Locations((x, y)):
-                            Rectangle(module_size, module_size, mode=Mode.ADD)
+                            RectangleRounded(
+                                module_size, module_size, radius, mode=Mode.ADD
+                            )
+                # Finder patterns: outer ring + inner solid, both rounded
+                for fr, fc in [
+                    (0, 0),
+                    (0, n - _FINDER_SIZE),
+                    (n - _FINDER_SIZE, 0),
+                ]:
+                    cx = (fc + _FINDER_SIZE / 2 - n / 2) * module_size
+                    cy = (n / 2 - fr - _FINDER_SIZE / 2) * module_size
+                    with Locations((cx, cy)):
+                        RectangleRounded(
+                            _FINDER_SIZE * module_size,
+                            _FINDER_SIZE * module_size,
+                            radius,
+                            mode=Mode.ADD,
+                        )
+                        RectangleRounded(
+                            5 * module_size,
+                            5 * module_size,
+                            radius,
+                            mode=Mode.SUBTRACT,
+                        )
+                        RectangleRounded(
+                            3 * module_size,
+                            3 * module_size,
+                            radius,
+                            mode=Mode.ADD,
+                        )
             extrude(amount=self.module_height)
         p_modules.part.label = "modules"
         p_modules.part.color = Color(0x111111, alpha=0xFF)
