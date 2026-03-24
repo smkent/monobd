@@ -6,6 +6,7 @@ from build123d import (
     BuildSketch,
     Mode,
     Plane,
+    add,
     import_svg,
     mirror,
     scale,
@@ -18,13 +19,17 @@ class SVGSketch(BaseSketchObject):
         file_name: str | Path,
         size: float,
         rotation: float = 180,
+        flip_x: bool = True,
         align: tuple[Align, Align] = (Align.CENTER, Align.CENTER),
         mode: Mode = Mode.ADD,
     ):
         with BuildSketch() as sk:
             ep = import_svg(str(file_name))
-            ep = mirror(ep, about=Plane.YZ)
-            max_dim = max(ep.bounding_box().size.Y, ep.bounding_box().size.X)
+            if flip_x:
+                ep = mirror(ep, about=Plane.YZ, mode=Mode.PRIVATE)
+            add(ep)
+            bbox = sk.sketch.bounding_box()
+            max_dim = max(bbox.size.Y, bbox.size.X)
             ep = scale(ep, by=(size / max_dim))
         super().__init__(
             obj=sk.sketch, rotation=rotation, align=align, mode=mode

@@ -4,6 +4,7 @@ from .common.registry import ModelRegistry
 MODELS = ModelRegistry(
     {
         "avrack": "monobd.models.avrack.model.AVRack",
+        "bikecard": "monobd.models.bikecard.model.BikeCardModel",
         "example": "monobd.models.example.ExampleModel",
         "poop_bag_dispenser_wall_mount": (
             "monobd.models.dog.PoopBagDispenserWallMount"
