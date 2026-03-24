@@ -11,11 +11,13 @@ from build123d import (
     Box,
     BuildPart,
     BuildSketch,
+    Circle,
     Color,
     Compound,
     Locations,
     Mode,
     Plane,
+    Rectangle,
     RectangleRounded,
     chamfer,
     extrude,
@@ -99,20 +101,70 @@ class QRCode(Model, name="qr_code"):
         radius = module_size * self.corner_radius_ratio
         finder_cells = self._finder_cell_set(n)
 
+        # Build lookup of all dark cells for neighbor checks
+        dark_set = {
+            (row, col)
+            for row in range(n)
+            for col in range(n)
+            if matrix[row][col]
+        }
+
+        # Compute center (x, y) in build123d coords for a matrix cell
+        def cell_center(row: int, col: int) -> tuple[float, float]:
+            return (
+                (col - n / 2 + 0.5) * module_size,
+                (n / 2 - row - 0.5) * module_size,
+            )
+
+        # Collect module centers and free-corner rounding positions.
+        # For each corner: (row_delta_for_neighbor1, col_delta, row_delta2, col_delta2,
+        #                    x_sign, y_sign)
+        # x_sign/y_sign: -1 = left/bottom edge, +1 = right/top edge
+        _corner_defs = [
+            ((-1, 0), (0, -1), -1, +1),  # NW: no N and no W neighbor
+            ((-1, 0), (0, +1), +1, +1),  # NE: no N and no E neighbor
+            ((+1, 0), (0, +1), +1, -1),  # SE: no S and no E neighbor
+            ((+1, 0), (0, -1), -1, -1),  # SW: no S and no W neighbor
+        ]
+        half = module_size / 2
+        module_centers: list[tuple[float, float]] = []
+        sub_positions: list[tuple[float, float]] = []
+        arc_positions: list[tuple[float, float]] = []
+
+        for row, col in dark_set - finder_cells:
+            cx, cy = cell_center(row, col)
+            module_centers.append((cx, cy))
+            if radius > 0:
+                for (dn1, dc1), (dn2, dc2), sx, sy in _corner_defs:
+                    if (row + dn1, col + dc1) not in dark_set and (
+                        row + dn2,
+                        col + dc2,
+                    ) not in dark_set:
+                        sub_positions.append(
+                            (
+                                cx + sx * (half - radius / 2),
+                                cy + sy * (half - radius / 2),
+                            )
+                        )
+                        arc_positions.append(
+                            (
+                                cx + sx * (half - radius),
+                                cy + sy * (half - radius),
+                            )
+                        )
+
         with BuildPart() as p_modules:
             with BuildSketch(Plane.XY.offset(self.base_thickness)):
-                # Regular dark modules (skip finder pattern cells)
-                for row in range(n):
-                    for col in range(n):
-                        if not matrix[row][col] or (row, col) in finder_cells:
-                            continue
-                        x = (col - n / 2 + 0.5) * module_size
-                        y = (n / 2 - row - 0.5) * module_size
-                        with Locations((x, y)):
-                            RectangleRounded(
-                                module_size, module_size, radius, mode=Mode.ADD
-                            )
-                # Finder patterns: outer ring + inner solid, both rounded
+                # All regular dark modules as plain squares
+                with Locations(module_centers):
+                    Rectangle(module_size, module_size, mode=Mode.ADD)
+                # Knock out free corners, then restore quarter-circle arcs
+                if sub_positions:
+                    with Locations(sub_positions):
+                        Rectangle(radius, radius, mode=Mode.SUBTRACT)
+                    with Locations(arc_positions):
+                        Circle(radius, mode=Mode.ADD)
+                # Finder patterns: outer ring + inner solid, uniformly rounded
                 for fr, fc in [
                     (0, 0),
                     (0, n - _FINDER_SIZE),
