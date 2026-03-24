@@ -1,26 +1,36 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import cached_property
 from typing import Any
 
+import qrcode as qrcode_lib
 from build123d import (
     Align,
     Axis,
     Box,
     BuildPart,
+    BuildSketch,
     Color,
     Compound,
+    Locations,
+    Mode,
     Plane,
+    Rectangle,
     chamfer,
+    extrude,
 )
 
 from ...common import Model
 
+_DEFAULT_TEXT = "https://github.com/smkent/monobd"
+
 
 @dataclass
 class QRCode(Model, name="qr_code"):
-    # Overall side length of the QR code square (mm)
+    # Text/URL to encode
+    text: str = _DEFAULT_TEXT
+    # Overall side length of the QR code area (mm), excluding border
     size: float = 50.0
     # Thickness of the flat base plate (mm)
     base_thickness: float = 2.0
@@ -43,9 +53,20 @@ class QRCode(Model, name="qr_code"):
         """Total plate side length including border on each side."""
         return self.size + self.border * 2
 
+    def _qr_matrix(self) -> list[list[bool]]:
+        qr = qrcode_lib.QRCode(border=0)
+        qr.add_data(self.text)
+        qr.make(fit=True)
+        return qr.get_matrix()
+
     @cached_property
     def assembly(self) -> Compound:
+        matrix = self._qr_matrix()
+        n = len(matrix)
+        module_size = self.size / n
+
         with BuildPart() as p:
+            # Base plate
             Box(
                 self.plate_size,
                 self.plate_size,
@@ -61,6 +82,23 @@ class QRCode(Model, name="qr_code"):
                 self.edge_chamfer,
             )
 
+            # Raised QR modules on top of the base plate
+            with BuildSketch(Plane.XY.offset(self.base_thickness)):
+                for row in range(n):
+                    for col in range(n):
+                        if not matrix[row][col]:
+                            continue
+                        # matrix row 0 is the top of the QR code; col 0 is left
+                        x = (col - n / 2 + 0.5) * module_size
+                        y = (n / 2 - row - 0.5) * module_size
+                        with Locations((x, y)):
+                            Rectangle(
+                                module_size,
+                                module_size,
+                                mode=Mode.ADD,
+                            )
+            extrude(amount=self.module_height)
+
         p.part.label = "base"
-        p.part.color = Color(0xDDDDDD, alpha=0xFF)
+        p.part.color = Color(0x333333, alpha=0xFF)
         return Compound(label=self.model_name, children=[p.part])

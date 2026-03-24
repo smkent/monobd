@@ -25,4 +25,5 @@ def test_qr_code_assembly() -> None:
     bb = model.assembly.bounding_box()
     assert bb.size.X == approx(58.0)
     assert bb.size.Y == approx(58.0)
-    assert bb.size.Z == approx(2.0)
+    # total height = base_thickness + module_height
+    assert bb.size.Z == approx(3.0)
