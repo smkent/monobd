@@ -21,6 +21,7 @@ from build123d import (
     RectangleRounded,
     chamfer,
     extrude,
+    fillet,
 )
 
 from ...common import Model
@@ -42,6 +43,7 @@ class QRCode(Model, name="qr_code"):
     # Quiet-zone border around the QR code area (mm)
     border: float = 4.0
     edge_chamfer: float = 0.8
+    corner_fillet: float = 5.0
     # Rounding applied to module corners and finder pattern corners,
     # as a fraction of module size (0 = square, 0.5 = fully rounded ends)
     corner_radius_ratio: float = 0.25
@@ -87,6 +89,8 @@ class QRCode(Model, name="qr_code"):
                 self.base_thickness,
                 align=(Align.CENTER, Align.CENTER, Align.MIN),
             )
+            if self.corner_fillet > 0:
+                fillet(p_base.edges().filter_by(Axis.Z), self.corner_fillet)
             chamfer(
                 p_base.edges().filter_by(Plane.XY).group_by(Axis.Z)[-1],
                 self.edge_chamfer,
