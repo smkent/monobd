@@ -225,8 +225,10 @@ class QRCode(Model, name="qr_code"):
                 # SVG logo in the center
                 if logo_half > 0:
                     SVGSketch(
-                        asset("ethernet-port.svg"),
+                        asset("immortan-joe.svg"),
                         size=logo_half * 2 * 0.85,
+                        rotation=0,
+                        flip_x=True,
                         mode=Mode.ADD,
                     )
             extrude(amount=self.module_height)
