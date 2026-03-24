@@ -37,9 +37,9 @@ class QRCode(Model, name="qr_code"):
     # Overall side length of the QR code area (mm), excluding border
     size: float = 50.0
     # Thickness of the flat base plate (mm)
-    base_thickness: float = 2.0
+    base_thickness: float = 4.0
     # Height of raised QR modules above the base surface (mm)
-    module_height: float = 1.0
+    module_height: float = 0.6
     # Quiet-zone border around the QR code area (mm)
     border: float = 4.0
     edge_chamfer: float = 0.8
