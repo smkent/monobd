@@ -124,7 +124,7 @@ def test_simple_model_export(
                     id=f"{vn or 'empty_name'}-step_and_stl",
                 ),
             )
-            for vn in VariantTestModel.variants().keys()
+            for vn in VariantTestModel.variants()
         )
     ),
 )

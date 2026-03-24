@@ -54,7 +54,6 @@ class BackCutoutShape(BaseSketchObject):
         hole_size = 0.325 * IN
         inset = 0.45 * IN
         with BuildSketch() as sk:
-
             RectangleRounded(
                 width - CUTOUT_INSET,
                 height - CUTOUT_INSET,

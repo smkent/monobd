@@ -24,10 +24,10 @@ def test_qr_code_assembly() -> None:
     model = QRCode.variant("default")
     assert len(model.assembly.leaves) == 2
     bb = model.assembly.bounding_box()
-    assert bb.size.X == approx(58.0)
-    assert bb.size.Y == approx(58.0)
+    assert approx(58.0) == bb.size.X
+    assert approx(58.0) == bb.size.Y
     # total height = base_thickness + module_height
-    assert bb.size.Z == approx(4.6)
+    assert approx(4.6) == bb.size.Z
     assert sorted(model.export_parts.keys()) == [
         "qr_code-default",
         "qr_code-default.base",

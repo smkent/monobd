@@ -7,7 +7,7 @@ import traceback
 import webbrowser
 from argparse import ArgumentParser, Namespace
 from collections import OrderedDict
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from functools import cached_property
@@ -15,7 +15,7 @@ from importlib import reload
 from pathlib import Path
 from threading import Condition, Event, Thread
 from types import ModuleType
-from typing import Any, Callable
+from typing import Any
 from urllib.error import URLError
 from urllib.request import urlopen
 

@@ -269,9 +269,7 @@ class RackTray(Compound):
                 device_size[0] - 1 / 4 * IN,
                 device_size[1] - 1 / 4 * IN,
             )
-        device_size = tuple(
-            v + constants.FIT for v in device_size
-        )  # type: ignore
+        device_size = tuple(v + constants.FIT for v in device_size)  # type: ignore
         self.dev_width, self.dev_height, self.dev_depth = device_size
         with BuildPart() as body:
             # Front face
