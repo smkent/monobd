@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from functools import cached_property
 from typing import Any
@@ -17,6 +18,7 @@ from build123d import (
     Locations,
     Mode,
     Plane,
+    Polygon,
     Rectangle,
     RectangleRounded,
     chamfer,
@@ -28,6 +30,13 @@ from ...common import Model
 
 _FINDER_SIZE = 7  # finder patterns are always 7x7 modules
 _DEFAULT_TEXT = "https://github.com/smkent/monobd"
+
+_EC_LEVELS = {
+    "L": qrcode_lib.constants.ERROR_CORRECT_L,
+    "M": qrcode_lib.constants.ERROR_CORRECT_M,
+    "Q": qrcode_lib.constants.ERROR_CORRECT_Q,
+    "H": qrcode_lib.constants.ERROR_CORRECT_H,
+}
 
 
 @dataclass
@@ -47,6 +56,10 @@ class QRCode(Model, name="qr_code"):
     # Rounding applied to module corners and finder pattern corners,
     # as a fraction of module size (0 = square, 0.5 = fully rounded ends)
     corner_radius_ratio: float = 0.25
+    # Error correction level: L (~7%), M (~15%), Q (~25%), H (~30%)
+    error_correction: str = "H"
+    # Logo area as a fraction of size (0 = no logo); keep <=0.3 for H level
+    logo_size: float = 0.25
 
     @staticmethod
     def _finder_cell_set(n: int) -> set[tuple[int, int]]:
@@ -71,7 +84,10 @@ class QRCode(Model, name="qr_code"):
         return self.size + self.border * 2
 
     def _qr_matrix(self) -> list[list[bool]]:
-        qr = qrcode_lib.QRCode(border=0)
+        qr = qrcode_lib.QRCode(
+            border=0,
+            error_correction=_EC_LEVELS[self.error_correction],
+        )
         qr.add_data(self.text)
         qr.make(fit=True)
         return qr.get_matrix()
@@ -135,7 +151,18 @@ class QRCode(Model, name="qr_code"):
         sub_positions: list[tuple[float, float]] = []
         arc_positions: list[tuple[float, float]] = []
 
-        for row, col in dark_set - finder_cells:
+        logo_half = self.logo_size * self.size / 2
+        logo_cells = {
+            (row, col)
+            for row, col in dark_set
+            if (
+                abs(cell_center(row, col)[0]) < logo_half
+                and abs(cell_center(row, col)[1]) < logo_half
+            )
+        }
+        skip_cells = finder_cells | logo_cells
+
+        for row, col in dark_set - skip_cells:
             cx, cy = cell_center(row, col)
             module_centers.append((cx, cy))
             if radius > 0:
@@ -195,6 +222,22 @@ class QRCode(Model, name="qr_code"):
                             radius,
                             mode=Mode.ADD,
                         )
+                # Star logo in the center
+                if logo_half > 0:
+                    r_outer = logo_half * 0.85
+                    r_inner = (
+                        r_outer * 0.382
+                    )  # golden ratio — natural star shape
+                    star_pts = [
+                        (
+                            (r_outer if i % 2 == 0 else r_inner)
+                            * math.cos(math.radians(90 + i * 36)),
+                            (r_outer if i % 2 == 0 else r_inner)
+                            * math.sin(math.radians(90 + i * 36)),
+                        )
+                        for i in range(10)
+                    ]
+                    Polygon(*star_pts, mode=Mode.ADD)
             extrude(amount=self.module_height)
         p_modules.part.label = "modules"
         p_modules.part.color = Color(0x111111, alpha=0xFF)
