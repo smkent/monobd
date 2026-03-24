@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from functools import cached_property
 from typing import Any
@@ -18,7 +17,6 @@ from build123d import (
     Locations,
     Mode,
     Plane,
-    Polygon,
     Rectangle,
     RectangleRounded,
     chamfer,
@@ -27,6 +25,8 @@ from build123d import (
 )
 
 from ...common import Model
+from ...objects import SVGSketch
+from .assets import asset
 
 _FINDER_SIZE = 7  # finder patterns are always 7x7 modules
 _DEFAULT_TEXT = "https://github.com/smkent/monobd"
@@ -222,22 +222,13 @@ class QRCode(Model, name="qr_code"):
                             radius,
                             mode=Mode.ADD,
                         )
-                # Star logo in the center
+                # SVG logo in the center
                 if logo_half > 0:
-                    r_outer = logo_half * 0.85
-                    r_inner = (
-                        r_outer * 0.382
-                    )  # golden ratio — natural star shape
-                    star_pts = [
-                        (
-                            (r_outer if i % 2 == 0 else r_inner)
-                            * math.cos(math.radians(90 + i * 36)),
-                            (r_outer if i % 2 == 0 else r_inner)
-                            * math.sin(math.radians(90 + i * 36)),
-                        )
-                        for i in range(10)
-                    ]
-                    Polygon(*star_pts, mode=Mode.ADD)
+                    SVGSketch(
+                        asset("ethernet-port.svg"),
+                        size=logo_half * 2 * 0.85,
+                        mode=Mode.ADD,
+                    )
             extrude(amount=self.module_height)
         p_modules.part.label = "modules"
         p_modules.part.color = Color(0x111111, alpha=0xFF)
