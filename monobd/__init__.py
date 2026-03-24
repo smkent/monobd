@@ -11,6 +11,7 @@ MODELS = ModelRegistry(
         ),
         "screw_handle": "monobd.models.hardware.ScrewHandle",
         "esp_3dp": "monobd.models.pcb.ESP3DP",
+        "qr_code": "monobd.models.qr.QRCode",
     }
 )
 
