@@ -48,7 +48,7 @@ class ModelRenderer:
             yield MODELS.get_model(self.args.model_name)
             return
         if self.args.render_all:
-            for model_name in MODELS.keys():
+            for model_name in MODELS:
                 yield MODELS.get_model(model_name)
 
     def render_variants(self, model_class: type[Model]) -> Iterator[Model]:

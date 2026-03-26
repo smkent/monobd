@@ -1,5 +1,5 @@
 from .hexagons import HexagonPattern
-from .svg import SVGSketch
 from .hole import PrintableCounterBoreHole
+from .svg import SVGSketch
 
 __all__ = ["HexagonPattern", "PrintableCounterBoreHole", "SVGSketch"]
