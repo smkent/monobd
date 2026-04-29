@@ -1,18 +1,21 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cached_property
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from build123d import IN, Color, Compound, Location
 
-from ...common import Model
+from monobd.common import Model
+
 from . import constants
 from .assets import asset
 from .frame import RackFrame
 from .tray import RackTray
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 
 @dataclass

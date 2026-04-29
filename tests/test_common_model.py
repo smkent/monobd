@@ -1,4 +1,3 @@
-from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cached_property
 from itertools import chain
@@ -7,7 +6,6 @@ from typing import Any
 
 import pytest
 from build123d import Box, BuildPart, Compound
-from pytest import approx
 
 from monobd.common import Model
 
@@ -43,25 +41,25 @@ class VariantTestModel(Model, name="variantmodel"):
 
 
 @pytest.fixture
-def model() -> Iterator[SimpleTestModel]:
+def model() -> SimpleTestModel:
     instance = SimpleTestModel()
     assert instance.__class__.variants() == {}
-    yield instance
+    return instance
 
 
 def test_model(model: SimpleTestModel) -> None:
     assert len(model.assembly.leaves) == 1
     bounding_box = model.assembly.bounding_box()
-    assert [i for i in bounding_box.size] == approx([10, 20, 30])
+    assert list(bounding_box.size) == pytest.approx([10, 20, 30])
     assert sorted(model.export_parts.keys()) == ["testmodel"]
 
 
 @pytest.mark.parametrize(
-    ["model_class", "expected_variant_names"],
-    (
+    ("model_class", "expected_variant_names"),
+    [
         pytest.param(SimpleTestModel, {""}),
         pytest.param(VariantTestModel, {"", "small", "large"}),
-    ),
+    ],
 )
 def test_model_all_variants(
     model_class: type[Model], expected_variant_names: set[str]
@@ -72,18 +70,19 @@ def test_model_all_variants(
 
 
 @pytest.mark.parametrize(
-    ["step", "stl", "expected_files"],
-    (
+    ("step", "stl", "expected_files"),
+    [
         pytest.param(True, False, {"testmodel.step"}, id="step"),
         pytest.param(False, True, {"testmodel.stl"}, id="stl"),
         pytest.param(
             True, True, {"testmodel.step", "testmodel.stl"}, id="step_and_stl"
         ),
-    ),
+    ],
 )
 def test_simple_model_export(
     model: SimpleTestModel,
     temp_dir: Path,
+    *,
     step: bool,
     stl: bool,
     expected_files: set[str],
@@ -95,7 +94,7 @@ def test_simple_model_export(
 
 
 @pytest.mark.parametrize(
-    ["variant_name", "step", "stl", "expected_files"],
+    ("variant_name", "step", "stl", "expected_files"),
     chain(
         *(
             (
@@ -131,6 +130,7 @@ def test_simple_model_export(
 def test_variant_model_export(
     variant_name: str,
     temp_dir: Path,
+    *,
     step: bool,
     stl: bool,
     expected_files: set[str],

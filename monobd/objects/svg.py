@@ -19,10 +19,11 @@ class SVGSketch(BaseSketchObject):
         file_name: str | Path,
         size: float,
         rotation: float = 180,
-        flip_x: bool = True,
         align: tuple[Align, Align] = (Align.CENTER, Align.CENTER),
         mode: Mode = Mode.ADD,
-    ):
+        *,
+        flip_x: bool = True,
+    ) -> None:
         with BuildSketch() as sk:
             ep = import_svg(str(file_name))
             if flip_x:

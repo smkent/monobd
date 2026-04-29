@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from build123d import (
     IN,
@@ -25,8 +25,12 @@ from build123d import (
     extrude,
 )
 
-from ...objects import HexagonPattern, PrintableCounterBoreHole, SVGSketch
+from monobd.objects import HexagonPattern, PrintableCounterBoreHole, SVGSketch
+
 from . import constants
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class RackTrayFront(BasePartObject):
@@ -42,8 +46,7 @@ class RackTrayFront(BasePartObject):
             Align.MIN,
         ),
         mode: Mode = Mode.ADD,
-        depth: float | None = None,
-    ):
+    ) -> None:
         self.dev_width, self.dev_height, self.dev_depth = device_size
         with BuildPart() as p:
             with BuildSketch() as sk:
@@ -94,7 +97,6 @@ class RackTrayBody(BasePartObject):
     def __init__(
         self,
         device_size: tuple[float, float, float] = (0, 0, 0),
-        hexagon_pattern: bool = True,
         rotation: RotationLike = (0, 0, 0),
         align: tuple[Align, Align, Align] = (
             Align.CENTER,
@@ -103,7 +105,9 @@ class RackTrayBody(BasePartObject):
         ),
         mode: Mode = Mode.ADD,
         depth: float | None = None,
-    ):
+        *,
+        hexagon_pattern: bool = True,
+    ) -> None:
         self.dev_width, self.dev_height, self.dev_depth = device_size
         depth = self.dev_depth + constants.LIP + (1 * MM)
         with BuildPart() as p:
@@ -194,8 +198,7 @@ class RackTrayBack(BasePartObject):
             Align.MIN,
         ),
         mode: Mode = Mode.ADD,
-        depth: float | None = None,
-    ):
+    ) -> None:
         self.dev_width, self.dev_height, self.dev_depth = device_size
         with BuildPart() as p:
             with BuildSketch() as sk:
@@ -262,14 +265,15 @@ class RackTray(Compound):
         cutout_size: tuple[float, float] | None = None,
         image_file: Path | str = "",
         label: str = "trays",
+        *,
         hexagon_pattern: bool = True,
-    ):
+    ) -> None:
         if cutout_size is None:
             cutout_size = (
                 device_size[0] - 1 / 4 * IN,
                 device_size[1] - 1 / 4 * IN,
             )
-        device_size = tuple(v + constants.FIT for v in device_size)  # type: ignore
+        device_size = tuple(v + constants.FIT for v in device_size)  # ty: ignore[invalid-assignment]
         self.dev_width, self.dev_height, self.dev_depth = device_size
         with BuildPart() as body:
             # Front face

@@ -22,11 +22,12 @@ class HexagonPattern(BaseSketchObject):
         height: float,
         hex_size: float = 8,
         hex_spacing: float = 1.4,
-        whole_only: bool = False,
         rotation: float = 0,
         align: tuple[Align, Align] = (Align.CENTER, Align.CENTER),
         mode: Mode = Mode.ADD,
-    ):
+        *,
+        whole_only: bool = False,
+    ) -> None:
         self._width = width
         self._height = height
         self.hex_size = hex_size

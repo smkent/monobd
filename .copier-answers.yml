@@ -1,0 +1,22 @@
+# Changes here will be overwritten by Copier
+_commit: v0.7.0
+_src_path: gh:smkent/copier-python
+copyright_holder: Stephen Kent
+copyright_holder_email: smkent@smkent.net
+copyright_license: GPL-3.0
+copyright_year: '2025'
+enable_container: false
+enable_coverage: true
+enable_docs: true
+enable_pypi: false
+github_user: smkent
+project_description: A monorepository for my build123d models.
+project_name: monobd
+project_slug: monobd
+project_type: application
+project_visibility: public
+python_version_maximum: '3.12'
+python_version_minimum: '3.10'
+template_attribution: true
+user_email: smkent@smkent.net
+user_name: Stephen Kent
