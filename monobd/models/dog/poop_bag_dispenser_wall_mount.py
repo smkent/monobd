@@ -35,7 +35,7 @@ from build123d import (
     mirror,
 )
 
-from ...common import Model
+from monobd.common import Model
 
 first_and_last = itemgetter(0, -1)
 
@@ -49,7 +49,7 @@ class DispenserOutline(BaseSketchObject):
         rotation: float = 0,
         align: tuple[Align, Align] = (Align.CENTER, Align.MIN),
         mode: Mode = Mode.ADD,
-    ):
+    ) -> None:
         gap = (1 / 2) * IN
         with BuildSketch() as sk:
             Circle(radius=radius + thickness)
@@ -86,7 +86,7 @@ class DispenserOutline(BaseSketchObject):
 class DispenserCutout(BasePartObject):
     def __init__(
         self,
-        width: float,
+        width: float,  # noqa: ARG002
         radius: float,
         rotation: RotationLike = (90, 0, 0),
         align: tuple[Align, Align, Align] = (
@@ -95,8 +95,8 @@ class DispenserCutout(BasePartObject):
             Align.CENTER,
         ),
         mode: Mode = Mode.ADD,
-        depth: float | None = None,
-    ):
+        depth: float | None = None,  # noqa: ARG002
+    ) -> None:
         opening_length = (2 + 1 / 4) * IN
         opening_width = (1 / 2) * IN
         with BuildPart() as p:
@@ -150,8 +150,8 @@ class DispenserBody(BasePartObject):
             Align.CENTER,
         ),
         mode: Mode = Mode.ADD,
-        depth: float | None = None,
-    ):
+        depth: float | None = None,  # noqa: ARG002
+    ) -> None:
         with BuildPart() as p:
             with BuildSketch():
                 DispenserOutline(

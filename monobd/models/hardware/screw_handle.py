@@ -32,7 +32,7 @@ from build123d import (
     make_face,
 )
 
-from ...common import Model
+from monobd.common import Model
 
 
 class ScrewStyle(Enum):
@@ -51,7 +51,7 @@ class HandleOutline(BaseSketchObject):
         rotation: float = 0,
         align: tuple[Align, Align] = (Align.CENTER, Align.MIN),
         mode: Mode = Mode.ADD,
-    ):
+    ) -> None:
         with BuildSketch() as sk:
             with BuildLine():
                 sub = (height + resize) * math.tan(angle * (math.pi / 180))
@@ -91,8 +91,7 @@ class HandleBody(BasePartObject):
             Align.CENTER,
         ),
         mode: Mode = Mode.ADD,
-        depth: float | None = None,
-    ):
+    ) -> None:
         with BuildPart() as p:
             with BuildSketch():
                 HandleOutline(

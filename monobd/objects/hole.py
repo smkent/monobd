@@ -28,8 +28,8 @@ class PrintableCounterBoreHole(BasePartObject):
             Align.CENTER,
         ),
         mode: Mode = Mode.SUBTRACT,
-    ):
-        context: BuildPart | None = BuildPart._get_context(self)
+    ) -> None:
+        context: BuildPart | None = BuildPart._get_context(self)  # noqa: SLF001
         validate_inputs(context, self)
         if depth is None and context is not None:
             depth = context.max_dimension

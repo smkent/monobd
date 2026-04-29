@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from argparse import ArgumentParser, Namespace
-from collections.abc import Iterator
 from functools import cached_property
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from .. import MODELS
-from ..common import Model
+from monobd import MODELS
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from monobd.common import Model
 
 
 class ModelRenderer:
@@ -38,7 +42,7 @@ class ModelRenderer:
             dest="dest",
             type=Path,
             metavar="dir",
-            default=Path(".") / "renders",
+            default=Path("renders"),
             help="Destination directory (default: %(default)s)",
         )
         return ap.parse_args()
@@ -61,7 +65,7 @@ class ModelRenderer:
         try:
             for model_class in self.render_models():
                 for model in self.render_variants(model_class):
-                    print(
+                    print(  # noqa: T201
                         f"Rendering {model_class.__name__} model"
                         + (
                             f" variant {model.variant_name}"
@@ -69,11 +73,11 @@ class ModelRenderer:
                             else ""
                         )
                     )
-                    print(model.assembly.show_topology())
-                    print("Exporting model")
+                    print(model.assembly.show_topology())  # noqa: T201
+                    print("Exporting model")  # noqa: T201
                     model.export(self.args.dest, step=True, stl=True)
         except KeyboardInterrupt:
-            print("")
+            print()  # noqa: T201
             raise
 
 

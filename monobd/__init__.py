@@ -1,4 +1,8 @@
-from .__version__ import __version__ as version
+"""A monorepository for my build123d models."""
+
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as import_version
+
 from .common.registry import ModelRegistry
 
 MODELS = ModelRegistry(
@@ -15,4 +19,9 @@ MODELS = ModelRegistry(
     }
 )
 
-__all__ = ["version", "MODELS"]
+try:
+    version = import_version(__name__)
+except PackageNotFoundError:  # pragma: no cover
+    version = "0.0.0"
+
+__all__ = ["MODELS", "version"]

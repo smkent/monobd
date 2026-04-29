@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from build123d import Compound, export_step, export_stl
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 @dataclass
@@ -27,7 +29,9 @@ class Model:
         return {}
 
     @classmethod
-    def variant(cls, variant_name: str | None, default: bool = True) -> Model:
+    def variant(
+        cls, variant_name: str | None, *, default: bool = True
+    ) -> Model:
         variant_name = variant_name or ""
         variants = cls.variants()
         if default and variant_name not in variants:
@@ -58,22 +62,22 @@ class Model:
             for part in self.assembly.leaves:
                 part_name = _part_fq_name(part)
                 if part_name in export_parts:
-                    raise Exception(f"Duplicate part name {part_name}")
+                    raise Exception(f"Duplicate part name {part_name}")  # noqa: TRY002
                 export_parts[part_name] = part
         return export_parts
 
     def export(
-        self, dest: Path | None = None, step: bool = True, stl: bool = False
+        self, dest: Path | None = None, *, step: bool = True, stl: bool = False
     ) -> None:
         def _export_step(assembly: Compound, path: Path) -> None:
-            print(f"Exporting {path}")
+            print(f"Exporting {path}")  # noqa: T201
             export_step(assembly, path)
 
         def _export_stl(assembly: Compound, path: Path) -> None:
-            print(f"Exporting {path}")
+            print(f"Exporting {path}")  # noqa: T201
             export_stl(assembly, path)
 
-        dest = dest or Path(".")
+        dest = dest or Path()
         dest.mkdir(exist_ok=True)
         for part_name, part in self.export_parts.items():
             if step:

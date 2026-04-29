@@ -7,21 +7,19 @@ import traceback
 import webbrowser
 from argparse import ArgumentParser, Namespace
 from collections import OrderedDict
-from collections.abc import Callable, Iterator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from functools import cached_property
 from importlib import reload
 from pathlib import Path
 from threading import Condition, Event, Thread
-from types import ModuleType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.error import URLError
 from urllib.request import urlopen
 
 import psutil
-from ocp_vscode import show  # type: ignore
-from ocp_vscode.comms import CMD_PORT as OCP_VIEWER_PORT  # type: ignore
+from ocp_vscode import show
+from ocp_vscode.comms import CMD_PORT as OCP_VIEWER_PORT
 from watchdog.events import (
     DirCreatedEvent,
     DirModifiedEvent,
@@ -31,7 +29,11 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from .. import MODELS
+from monobd import MODELS
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+    from types import ModuleType
 
 
 @dataclass
@@ -41,17 +43,19 @@ class Watcher:
     class EventHandler(PatternMatchingEventHandler):
         def __init__(
             self, callback: Callable[[], None], *args: Any, **kwargs: Any
-        ):
+        ) -> None:
             super().__init__(*args, **kwargs)
             self.callback = callback
 
         def on_created(
-            self, event: DirCreatedEvent | FileCreatedEvent
+            self,
+            event: DirCreatedEvent | FileCreatedEvent,  # noqa: ARG002
         ) -> None:
             self.callback()
 
         def on_modified(
-            self, event: DirModifiedEvent | FileModifiedEvent
+            self,
+            event: DirModifiedEvent | FileModifiedEvent,  # noqa: ARG002
         ) -> None:
             self.callback()
 
@@ -63,7 +67,7 @@ class Watcher:
                 while True:
                     time.sleep(1000)
             except KeyboardInterrupt:
-                print("")
+                print()  # noqa: T201
 
     @cached_property
     def args(self) -> Namespace:
@@ -163,45 +167,49 @@ class Watcher:
         url = f"http://localhost:{OCP_VIEWER_PORT}/viewer"
         if self.ocp_viewer_process:
             if not self.args.restart_viewer:
-                print(f"OCP viewer is already running: {url}")
+                print(f"OCP viewer is already running: {url}")  # noqa: T201
                 yield
                 return
-            print(
+            print(  # noqa: T201
                 "Stopping already running OCP viewer"
                 f" (PID {self.ocp_viewer_process.pid})"
             )
             self.ocp_viewer_process.terminate()
             psutil.wait_procs([self.ocp_viewer_process], timeout=2)
             del self.ocp_viewer_process
-        print("Starting OCP viewer")
+        print("Starting OCP viewer")  # noqa: T201
         try:
-            subprocess.Popen(
-                ["python", "-m", "ocp_vscode"]
-                + self.args.ocp_viewer_args.split(),
+            subprocess.Popen(  # noqa: S603
+                [
+                    "python",
+                    "-m",
+                    "ocp_vscode",
+                    *self.args.ocp_viewer_args.split(),
+                ],
                 start_new_session=True,
             )  # nosec B603
             for _ in range(100):
                 try:
-                    urlopen(url).read()  # nosec B310
+                    urlopen(url).read()  # noqa: S310
                     break
                 except URLError:
                     time.sleep(0.25)
             else:
-                raise Exception("OCP viewer communication failed")
+                raise Exception("OCP viewer communication failed")  # noqa: TRY002
             if self.args.open_viewer:
                 webbrowser.open_new_tab(url)
                 time.sleep(0.5)
             yield
         finally:
             if self.args.stop_viewer_on_exit and self.ocp_viewer_process:
-                print("Stopping OCP viewer")
+                print("Stopping OCP viewer")  # noqa: T201
                 self.ocp_viewer_process.terminate()
                 psutil.wait_procs([self.ocp_viewer_process], timeout=2)
 
     @contextmanager
     def event_watcher(self) -> Iterator[None]:
         try:
-            print("Starting event watcher")
+            print("Starting event watcher")  # noqa: T201
             event_handler = self.EventHandler(
                 callback=self.runner.trigger, patterns=["*.py"]
             )
@@ -210,7 +218,7 @@ class Watcher:
             observer.start()
             yield
         finally:
-            print("Stopping event watcher")
+            print("Stopping event watcher")  # noqa: T201
             self.runner.stop()
             observer.stop()
             with suppress(RuntimeError):
@@ -240,29 +248,29 @@ class Watcher:
                 continue
             if m not in self.modules:
                 self.modules[m] = p
-        print("Reloading imports")
+        print("Reloading imports")  # noqa: T201
         for mod in self.modules.values():
             try:
                 reload(mod)
-            except ModuleNotFoundError:
+            except ModuleNotFoundError:  # noqa: PERF203
                 traceback.print_exc()
 
     def run_callback(self) -> None:
         try:
             self.reload_modules()
-            print("Rendering model")
+            print("Rendering model")  # noqa: T201
             model = MODELS.get_model(self.args.model_name).variant(
                 self.args.variant_name
             )
-            print(model.assembly.show_topology())
+            print(model.assembly.show_topology())  # noqa: T201
             show(model.assembly, axes=True, axes0=True, transparent=False)
             if self.args.dest:
                 model.export(self.args.dest, step=True, stl=False)
         except KeyboardInterrupt:
             raise
-        except Exception:
+        except Exception:  # noqa: BLE001
             traceback.print_exc()
-        print("")
+        print()  # noqa: T201
 
 
 class Runner(Thread):
@@ -273,7 +281,7 @@ class Runner(Thread):
         delay: float = 0.5,
         *args: Any,
         **kwargs: Any,
-    ):
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.condition = condition
         self.run_callback = run_callback

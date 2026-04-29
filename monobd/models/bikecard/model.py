@@ -27,8 +27,9 @@ from build123d import (
     fillet,
 )
 
-from ...common import Model
-from ...objects import SVGSketch
+from monobd.common.model import Model
+from monobd.objects import SVGSketch
+
 from .assets import asset
 
 CARD_WIDTH = 6 * IN
@@ -46,11 +47,12 @@ class BackCutoutShape(BaseSketchObject):
         width: float = CARD_WIDTH,
         height: float = CARD_HEIGHT,
         svg: str | None = None,
-        corner_holes: bool = True,
         rotation: float = 0,
         align: tuple[Align, Align] = (Align.CENTER, Align.CENTER),
         mode: Mode = Mode.ADD,
-    ):
+        *,
+        corner_holes: bool = True,
+    ) -> None:
         hole_size = 0.325 * IN
         inset = 0.45 * IN
         with BuildSketch() as sk:
@@ -95,7 +97,7 @@ class FrontCutoutShape(BaseSketchObject):
         rotation: float = 0,
         align: tuple[Align, Align] = (Align.CENTER, Align.CENTER),
         mode: Mode = Mode.ADD,
-    ):
+    ) -> None:
         with BuildSketch() as sk:
             RectangleRounded(
                 width + fit,

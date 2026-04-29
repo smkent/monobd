@@ -24,8 +24,9 @@ from build123d import (
     fillet,
 )
 
-from ...common import Model
-from ...objects import SVGSketch
+from monobd.common import Model
+from monobd.objects import SVGSketch
+
 from .assets import asset
 
 _FINDER_SIZE = 7  # finder patterns are always 7x7 modules
@@ -90,7 +91,7 @@ class QRCode(Model, name="qr_code"):
         )
         qr.add_data(self.text)
         qr.make(fit=True)
-        return cast(list[list[bool]], qr.get_matrix())
+        return cast("list[list[bool]]", qr.get_matrix())
 
     @cached_property
     def assembly(self) -> Compound:

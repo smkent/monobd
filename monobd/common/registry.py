@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from importlib import import_module
+from typing import TYPE_CHECKING
 
-from .model import Model
+if TYPE_CHECKING:
+    from .model import Model
 
 
 class ModelRegistry(dict):
@@ -11,7 +13,4 @@ class ModelRegistry(dict):
             raise KeyError(f"Model not found: {model_name}")
         module_path, class_name = import_path.rsplit(".", 1)
         module = import_module(module_path)
-        model_cls = getattr(module, class_name)
-        assert isinstance(model_cls, type)
-        assert issubclass(model_cls, Model)
-        return model_cls
+        return getattr(module, class_name)

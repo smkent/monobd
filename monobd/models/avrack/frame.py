@@ -59,8 +59,8 @@ class RackHoles(BasePartObject):
         ),
         mode: Mode = Mode.SUBTRACT,
         depth: float | None = None,
-    ):
-        context: BuildPart | None = BuildPart._get_context(self)
+    ) -> None:
+        context: BuildPart | None = BuildPart._get_context(self)  # noqa: SLF001
         validate_inputs(context, self)
         if depth is not None:
             hole_depth = depth * 2
@@ -69,7 +69,7 @@ class RackHoles(BasePartObject):
         else:
             raise ValueError("No depth provided")
         with BuildPart() as p:
-            all_u = [(0, uu * constants.U) for uu in range(0, u)]
+            all_u = [(0, uu * constants.U) for uu in range(u)]
             per_u = [(0, y) for y in (0, 5 / 8 * IN, -5 / 8 * IN)]
             with BuildSketch() as sk, Locations(*all_u), Locations(*per_u):
                 RectangleRounded(2 / 5 * IN, 1 / 4 * IN, radius=(7 / 64 * IN))
@@ -86,8 +86,7 @@ class RackFrameHalf(BasePartObject):
         rotation: RotationLike = (0, 0, 0),
         align: tuple[Align, Align, Align] | None = None,
         mode: Mode = Mode.ADD,
-        depth: float | None = None,
-    ):
+    ) -> None:
         outer_height = 1 * constants.U - constants.FIT * 2
         shift_direction = -1 if (half == RackMountWhichHalf.LEFT) else 1
         part_width = 19 / 2 * IN

@@ -15,7 +15,7 @@ from build123d import (
     fillet,
 )
 
-from ..common import Model
+from monobd.common import Model
 
 
 @dataclass

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from build123d import (
     Align,
@@ -32,8 +31,11 @@ from build123d import (
     make_hull,
 )
 
-from ...common import Model
-from ...objects import HexagonPattern
+from monobd.common import Model
+from monobd.objects import HexagonPattern
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 @dataclass
@@ -126,8 +128,7 @@ class ScrewPylon(BasePartObject):
             Align.MIN,
         ),
         mode: Mode = Mode.ADD,
-        depth: float | None = None,
-    ):
+    ) -> None:
         with BuildPart() as p:
             aw = 2
             bw = 3
@@ -163,8 +164,7 @@ class ScrewPylons(BasePartObject):
             Align.MIN,
         ),
         mode: Mode = Mode.ADD,
-        depth: float | None = None,
-    ):
+    ) -> None:
         with BuildPart() as p:
             with grid.outer_grid_corners:
                 ScrewPylon(
@@ -199,8 +199,7 @@ class BaseCutout(BasePartObject):
             Align.MIN,
         ),
         mode: Mode = Mode.SUBTRACT,
-        depth: float | None = None,
-    ):
+    ) -> None:
         with BuildPart() as p:
             with BuildSketch() as sk:
                 if shape == "square":
@@ -214,7 +213,7 @@ class BaseCutout(BasePartObject):
                     Rectangle(sz, sz + curve)
                     fillet(sk.vertices(), radius=curve / 4)
                 else:
-                    raise Exception(f'Unknown shape "{shape}"')
+                    raise Exception(f'Unknown shape "{shape}"')  # noqa: TRY002
             extrude(amount=thickness)
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
@@ -261,7 +260,7 @@ class ESP3DP(Model, PCBGrid, name="esp_3dp"):
                     RectangleRounded(sz, sz, radius=5, mode=Mode.SUBTRACT)
             extrude(sk.sketch, amount=self.base_thickness, mode=Mode.SUBTRACT)
             return self.edge_chamfer / 2
-        elif self.base_style == "grid":
+        if self.base_style == "grid":
             with self.each_grid:
                 BaseCutout(
                     grid=self,
@@ -269,7 +268,7 @@ class ESP3DP(Model, PCBGrid, name="esp_3dp"):
                     shape="square",
                 )
             return self.edge_chamfer
-        raise Exception(f"Unknown base style {self.base_style}")
+        raise Exception(f"Unknown base style {self.base_style}")  # noqa: TRY002
 
     @cached_property
     def assembly(self) -> Compound:
