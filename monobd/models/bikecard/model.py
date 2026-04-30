@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from functools import cached_property
-from typing import Any
 
+from bdbox import Model, Preset
 from build123d import (
     IN,
     MM,
@@ -27,7 +26,6 @@ from build123d import (
     fillet,
 )
 
-from monobd.common.model import Model
 from monobd.objects import SVGSketch
 
 from .assets import asset
@@ -119,25 +117,16 @@ class FrontCutoutShape(BaseSketchObject):
 
 
 @dataclass
-class BikeCardModel(Model, name="bikecard"):
+class BikeCardModel(Model):
     style: str = "card"
     width: float = CARD_WIDTH
     height: float = CARD_HEIGHT
     svg: str | None = "immortan-joe.svg"
+    presets = (
+        Preset("bagtag", width=3.75 * IN, height=1.55 * IN, style="bagtag"),
+    )
 
-    @classmethod
-    def variants(cls) -> dict[str, dict[str, Any]]:
-        return {
-            "default": {},
-            "bagtag": {
-                "width": 3.75 * IN,
-                "height": 1.55 * IN,
-                "style": "bagtag",
-            },
-        }
-
-    @cached_property
-    def assembly(self) -> Compound:
+    def build(self) -> Compound:
         with BuildPart() as p:
             with BuildSketch():
                 RectangleRounded(
@@ -173,4 +162,4 @@ class BikeCardModel(Model, name="bikecard"):
             extrude(amount=FRAME_HEIGHT, mode=Mode.SUBTRACT)
         p.part.label = "frame"
         p.part.color = Color(0x3388FF, alpha=0xFF)
-        return Compound(label=self.model_name, children=[p.part])
+        return p.part

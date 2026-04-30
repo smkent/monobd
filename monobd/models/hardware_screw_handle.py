@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from enum import Enum, auto
-from functools import cached_property
 from typing import Any
 
+from bdbox import Choice, Model
 from build123d import (
     IN,
     MM,
@@ -31,13 +29,6 @@ from build123d import (
     fillet,
     make_face,
 )
-
-from monobd.common import Model
-
-
-class ScrewStyle(Enum):
-    COUNTER_SINK = auto()
-    COUNTER_BORE = auto()
 
 
 class HandleOutline(BaseSketchObject):
@@ -120,15 +111,14 @@ class HandleBody(BasePartObject):
         )
 
 
-@dataclass
-class ScrewHandle(Model, name="screw_handle"):
+class ScrewHandle(Model):
     length: float = 6 * IN
     height: float = (1 + 1 / 4) * IN
     thickness: float = 1 / 2 * IN
     angle: float = 20
     screw_size: float = (3 / 16) * IN
-    screw_style: ScrewStyle = field(
-        default_factory=lambda: ScrewStyle.COUNTER_SINK
+    screw_style: str = Choice(
+        "counter_sink", choices=("counter_sink", "counter_bore")
     )
     screw_hole_depth: float = 0
     screw_hole_countersink_angle: float | None = 60
@@ -148,8 +138,7 @@ class ScrewHandle(Model, name="screw_handle"):
             },
         }
 
-    @cached_property
-    def assembly(self) -> Compound:
+    def build(self) -> Compound:
         with BuildPart() as p:
             HandleBody(
                 length=self.length,
@@ -161,7 +150,7 @@ class ScrewHandle(Model, name="screw_handle"):
                 GridLocations(self.length, 0, 2, 1),
                 Locations((0, 0, self.screw_hole_depth or self.height / 2)),
             ):
-                if self.screw_style == ScrewStyle.COUNTER_SINK:
+                if self.screw_style == "counter_sink":
                     kwargs = {}
                     if self.screw_hole_countersink_angle:
                         kwargs["counter_sink_angle"] = (
@@ -173,7 +162,7 @@ class ScrewHandle(Model, name="screw_handle"):
                         mode=Mode.SUBTRACT,
                         **kwargs,
                     )
-                elif self.screw_style == ScrewStyle.COUNTER_BORE:
+                elif self.screw_style == "counter_bore":
                     CounterBoreHole(
                         radius=self.screw_size / 2,
                         counter_bore_radius=self.screw_size,
@@ -182,4 +171,4 @@ class ScrewHandle(Model, name="screw_handle"):
                     )
         p.part.label = "handle"
         p.part.color = Color(0x00BBFF, alpha=0xCC)
-        return Compound(label=self.model_name, children=[p.part])
+        return p.part

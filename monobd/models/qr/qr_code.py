@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import cached_property
-from typing import Any, cast
+from typing import cast
 
 import qrcode as qrcode_lib  # type: ignore[import-untyped]
+from bdbox import Model, Preset
 from build123d import (
     Align,
     Axis,
@@ -24,7 +24,6 @@ from build123d import (
     fillet,
 )
 
-from monobd.common import Model
 from monobd.objects import SVGSketch
 
 from .assets import asset
@@ -41,7 +40,7 @@ _EC_LEVELS = {
 
 
 @dataclass
-class QRCode(Model, name="qr_code"):
+class QRCode(Model):
     # Text/URL to encode
     text: str = _DEFAULT_TEXT
     # Overall side length of the QR code area (mm), excluding border
@@ -62,6 +61,8 @@ class QRCode(Model, name="qr_code"):
     # Logo area as a fraction of size (0 = no logo); keep <=0.3 for H level
     logo_size: float = 0.25
 
+    presets = (Preset("small", size=35.0), Preset("large", size=80.0))
+
     @staticmethod
     def _finder_cell_set(n: int) -> set[tuple[int, int]]:
         cells: set[tuple[int, int]] = set()
@@ -70,14 +71,6 @@ class QRCode(Model, name="qr_code"):
                 for dc in range(_FINDER_SIZE):
                     cells.add((fr + dr, fc + dc))
         return cells
-
-    @classmethod
-    def variants(cls) -> dict[str, dict[str, Any]]:
-        return {
-            "default": {},
-            "small": {"size": 35.0},
-            "large": {"size": 80.0},
-        }
 
     @property
     def plate_size(self) -> float:
@@ -93,8 +86,7 @@ class QRCode(Model, name="qr_code"):
         qr.make(fit=True)
         return cast("list[list[bool]]", qr.get_matrix())
 
-    @cached_property
-    def assembly(self) -> Compound:
+    def build(self) -> Compound:
         matrix = self._qr_matrix()
         n = len(matrix)
         module_size = self.size / n
@@ -236,7 +228,4 @@ class QRCode(Model, name="qr_code"):
         p_modules.part.label = "modules"
         p_modules.part.color = Color(0x111111, alpha=0xFF)
 
-        return Compound(
-            label=self.model_name,
-            children=[p_base.part, p_modules.part],
-        )
+        return Compound(label="qrcode", children=[p_base.part, p_modules.part])

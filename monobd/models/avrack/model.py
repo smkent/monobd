@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
+from bdbox import Model
 from build123d import IN, Color, Compound, Location
-
-from monobd.common import Model
 
 from . import constants
 from .assets import asset
@@ -26,13 +25,8 @@ class TrayConfig:
     image_file: Path | None
 
 
-@dataclass
-class AVRack(Model, name="avrack"):
+class AVRack(Model):
     simple: bool = False
-
-    @classmethod
-    def variants(cls) -> dict[str, dict[str, Any]]:
-        return {"default": {}, "simple": {"simple": True}}
 
     @cached_property
     def trays_config(self) -> Iterator[TrayConfig]:
@@ -61,8 +55,7 @@ class AVRack(Model, name="avrack"):
             ),
         ]
 
-    @cached_property
-    def assembly(self) -> Compound:
+    def build(self) -> Compound:
         frame = RackFrame()
         trays = [
             RackTray(
@@ -81,6 +74,4 @@ class AVRack(Model, name="avrack"):
         for i in range(2, len(trays)):
             trays[i] = trays[i].move(Location((0, constants.U * (i - 1), 0)))
         trays_assembly = Compound(label="trays", children=trays)
-        return Compound(
-            label=self.model_name, children=[frame, trays_assembly]
-        )
+        return Compound(label="avrack", children=[frame, trays_assembly])

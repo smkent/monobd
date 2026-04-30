@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from functools import cached_property
-from typing import Any
-
+from bdbox import Model, Preset
 from build123d import (
     Align,
     Box,
@@ -15,22 +12,12 @@ from build123d import (
     fillet,
 )
 
-from monobd.common import Model
 
-
-@dataclass
-class ExampleModel(Model, name="example"):
+class ExampleModel(Model):
     height_factor: int = 1
+    presets = (Preset("tall", height_factor=2),)
 
-    @classmethod
-    def variants(cls) -> dict[str, dict[str, Any]]:
-        return {
-            "default": {},
-            "tall": {"height_factor": 2},
-        }
-
-    @cached_property
-    def assembly(self) -> Compound:
+    def build(self) -> Compound:
         with BuildPart() as p:
             Box(
                 10,
@@ -51,4 +38,4 @@ class ExampleModel(Model, name="example"):
             chamfer(p2.edges(), length=2)
         p2.part.label = "green_box"
         p2.part.color = Color(0x00CC22, alpha=0xCC)
-        return Compound(label=self.model_name, children=[p.part, p2.part])
+        return Compound(label="example", children=[p.part, p2.part])

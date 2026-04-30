@@ -28,15 +28,12 @@ classifiers = [
 ]
 keywords = []
 dependencies = [
+    "bdbox>=0.6.0",
     "build123d>=0.10.0",
     "ocp_vscode",
     "psutil>=7.0,<8.0",
     "qrcode>=8.2,<9.0",
 ]
-
-[project.scripts]
-bdview = "monobd.utils.bdview:main"
-bdrender = "monobd.utils.bdrender:main"
 
 [project.urls]
 Homepage = "https://smkent.github.io/monobd"
