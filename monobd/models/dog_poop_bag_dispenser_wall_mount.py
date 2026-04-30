@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from functools import cached_property
 from operator import itemgetter
-from typing import Any
 
+from bdbox import Model
 from build123d import (
     IN,
     MM,
@@ -34,8 +32,6 @@ from build123d import (
     make_face,
     mirror,
 )
-
-from monobd.common import Model
 
 first_and_last = itemgetter(0, -1)
 
@@ -178,20 +174,14 @@ class DispenserBody(BasePartObject):
         )
 
 
-@dataclass
-class PoopBagDispenserWallMount(Model, name="poop_bag_dispenser_wall_mount"):
+class PoopBagDispenserWallMount(Model):
     diameter = 1.6 * IN
     length: float = 4 * IN
     width: float = (2 + 3 / 4) * IN
     thickness: float = (1 / 8 + 1 / 32) * IN
     screw_size: float = (3 / 16) * IN
 
-    @classmethod
-    def variants(cls) -> dict[str, dict[str, Any]]:
-        return {"default": {}}
-
-    @cached_property
-    def assembly(self) -> Compound:
+    def build(self) -> Compound:
         with BuildPart() as p:
             DispenserBody(
                 radius=self.diameter / 2,
@@ -211,4 +201,4 @@ class PoopBagDispenserWallMount(Model, name="poop_bag_dispenser_wall_mount"):
                 )
         p.part.label = "dispenser"
         p.part.color = Color(0x33CC66, alpha=0xCC)
-        return Compound(label=self.model_name, children=[p.part])
+        return p.part

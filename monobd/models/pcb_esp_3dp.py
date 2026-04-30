@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass
-from functools import cached_property
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
+from bdbox import Model
 from build123d import (
     Align,
     Axis,
@@ -31,7 +31,6 @@ from build123d import (
     make_hull,
 )
 
-from monobd.common import Model
 from monobd.objects import HexagonPattern
 
 if TYPE_CHECKING:
@@ -220,8 +219,7 @@ class BaseCutout(BasePartObject):
         )
 
 
-@dataclass
-class ESP3DP(Model, PCBGrid, name="esp_3dp"):
+class ESP3DP(Model, PCBGrid):
     screw_hole_d: float = 4.5
     base_thickness: float = 2.6
     pylon_height: float = 6
@@ -229,12 +227,6 @@ class ESP3DP(Model, PCBGrid, name="esp_3dp"):
     mounting_screw_hole_d: float = 4.5
     edge_chamfer: float = 0.8
     base_style: str = "hex"
-
-    @classmethod
-    def variants(cls) -> dict[str, dict[str, Any]]:
-        return {
-            "default": {},
-        }
 
     @property
     def height(self) -> float:
@@ -270,8 +262,7 @@ class ESP3DP(Model, PCBGrid, name="esp_3dp"):
             return self.edge_chamfer
         raise Exception(f"Unknown base style {self.base_style}")  # noqa: TRY002
 
-    @cached_property
-    def assembly(self) -> Compound:
+    def build(self) -> Compound:
         with BuildPart() as p:
             with BuildSketch():
                 RectangleRounded(
@@ -319,4 +310,4 @@ class ESP3DP(Model, PCBGrid, name="esp_3dp"):
 
         p.part.label = "base"
         p.part.color = Color(0x00FF22, alpha=0x99)
-        return Compound(label=self.model_name, children=[p.part])
+        return p.part
