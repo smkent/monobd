@@ -1313,9 +1313,6 @@ name = "monobd"
 source = { editable = "." }
 dependencies = [
     { name = "bdbox" },
-    { name = "build123d" },
-    { name = "ocp-vscode" },
-    { name = "psutil" },
     { name = "qrcode" },
 ]
 
@@ -1339,9 +1336,6 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "bdbox", specifier = ">=0.10.0" },
-    { name = "build123d", specifier = ">=0.10.0" },
-    { name = "ocp-vscode" },
-    { name = "psutil", specifier = ">=7.0,<8.0" },
     { name = "qrcode", specifier = ">=8.2,<9.0" },
 ]
 
