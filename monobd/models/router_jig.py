@@ -20,67 +20,65 @@ from build123d import (
 
 
 class RouterJig(Model):
-    length: float = 6 * IN
-    width: float = 6 * IN
-    thickness: float = 4 * MM
-    corner_radius: float = 1 * IN
+    length_in: float = 6
+    width_in: float = 6
+    corner_radius_in: float = 1
+    thickness_mm: float = 4
 
     def build(self) -> Compound:
+        length = self.length_in * IN
+        width = self.width_in * IN
+        corner_radius = self.corner_radius_in * IN
+        thickness = self.thickness_mm * MM
         with BuildPart() as p:
             with BuildSketch() as sk:
-                Rectangle(
-                    self.length, self.width, align=(Align.MIN, Align.MIN)
-                )
+                Rectangle(length, width, align=(Align.MIN, Align.MIN))
                 fillet(
                     sk.vertices().sort_by_distance((0, 0))[0],
-                    radius=self.corner_radius,
+                    radius=corner_radius,
                 )
                 pos = (2 * IN,) * 2
                 with Locations(pos):
                     Rectangle(
-                        self.length,
-                        self.width,
+                        length,
+                        width,
                         align=(Align.MIN, Align.MIN),
                         mode=Mode.SUBTRACT,
                     )
                     fillet(
                         sk.vertices().sort_by_distance(pos)[0],
-                        radius=self.corner_radius / 2,
+                        radius=corner_radius / 2,
                     )
                 fillet(
-                    sk.vertices().sort_by_distance((self.length, 0))[:2],
+                    sk.vertices().sort_by_distance((length, 0))[:2],
                     radius=(1 / 4) * IN,
                 )
                 fillet(
-                    sk.vertices().sort_by_distance((0, self.width))[:2],
+                    sk.vertices().sort_by_distance((0, width))[:2],
                     radius=(1 / 4) * IN,
                 )
-                with Locations(
-                    (pos[0] + (self.length - pos[0]) / 2, pos[1] / 2)
-                ):
+                with Locations((pos[0] + (length - pos[0]) / 2, pos[1] / 2)):
                     RectangleRounded(
-                        (self.length - pos[0] / 2) / 2,
+                        (length - pos[0] / 2) / 2,
                         pos[1] / 2,
                         1 / 4 * IN,
                         mode=Mode.SUBTRACT,
                     )
-                with Locations(
-                    (pos[0] / 2, pos[1] + (self.width - pos[1]) / 2)
-                ):
+                with Locations((pos[0] / 2, pos[1] + (width - pos[1]) / 2)):
                     RectangleRounded(
                         pos[0] / 2,
-                        (self.width - pos[1] / 2) / 2,
+                        (width - pos[1] / 2) / 2,
                         1 / 4 * IN,
                         mode=Mode.SUBTRACT,
                     )
                 with Locations(
                     (
-                        pos[0] / 2 + self.corner_radius / 4,
-                        pos[1] / 2 + self.corner_radius / 4,
+                        pos[0] / 2 + corner_radius / 4,
+                        pos[1] / 2 + corner_radius / 4,
                     )
                 ):
                     Circle(radius=pos[0] / 4, mode=Mode.SUBTRACT)
-            extrude(amount=self.thickness)
-        p.part.label = "orange_box"
-        p.part.color = Color(0xFF8822, alpha=0x99)
+            extrude(amount=thickness)
+        p.part.label = "Router Jig"
+        p.part.color = Color(0xB0EB00)
         return Compound(children=[p.part])
