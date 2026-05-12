@@ -112,16 +112,16 @@ class HandleBody(BasePartObject):
 
 
 class ScrewHandle(Model):
-    length: float = 6 * IN
-    height: float = (1 + 1 / 4) * IN
-    thickness: float = 1 / 2 * IN
+    length: float = 6
+    height: float = 1 + 1 / 4
+    thickness: float = 1 / 2
     angle: float = 20
-    screw_size: float = (3 / 16) * IN
+    screw_size: float = 3 / 16
     screw_style: str = Choice(
         "counter_sink", choices=("counter_sink", "counter_bore")
     )
     screw_hole_depth: float = 0
-    screw_hole_countersink_angle: float | None = 60
+    screw_hole_countersink_angle: float = 60
 
     @classmethod
     def variants(cls) -> dict[str, dict[str, Any]]:
@@ -129,11 +129,11 @@ class ScrewHandle(Model):
             "default": {},
             "tray": {
                 "screw_hole_depth": (1 / 4 + 1 / 16) * IN,
-                "screw_size": (9 / 64) * IN,
+                "screw_size": (9 / 64),
                 "screw_hole_countersink_angle": None,
             },
             "thin": {
-                "thickness": 9 * MM,
+                "thickness": (9 / IN) * MM,
                 "screw_hole_countersink_angle": None,
             },
         }
@@ -141,14 +141,16 @@ class ScrewHandle(Model):
     def build(self) -> Compound:
         with BuildPart() as p:
             HandleBody(
-                length=self.length,
-                height=self.height,
+                length=self.length * IN,
+                height=self.height * IN,
                 angle=self.angle,
-                thickness=self.thickness,
+                thickness=self.thickness * IN,
             )
             with (
-                GridLocations(self.length, 0, 2, 1),
-                Locations((0, 0, self.screw_hole_depth or self.height / 2)),
+                GridLocations(self.length * IN, 0, 2, 1),
+                Locations(
+                    (0, 0, self.screw_hole_depth or (self.height * IN) / 2)
+                ),
             ):
                 if self.screw_style == "counter_sink":
                     kwargs = {}
@@ -157,15 +159,15 @@ class ScrewHandle(Model):
                             self.screw_hole_countersink_angle
                         )
                     CounterSinkHole(
-                        radius=self.screw_size / 2,
-                        counter_sink_radius=self.screw_size,
+                        radius=(self.screw_size * IN) / 2,
+                        counter_sink_radius=(self.screw_size * IN),
                         mode=Mode.SUBTRACT,
                         **kwargs,
                     )
                 elif self.screw_style == "counter_bore":
                     CounterBoreHole(
-                        radius=self.screw_size / 2,
-                        counter_bore_radius=self.screw_size,
+                        radius=(self.screw_size * IN) / 2,
+                        counter_bore_radius=(self.screw_size * IN),
                         counter_bore_depth=0,
                         mode=Mode.SUBTRACT,
                     )
