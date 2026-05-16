@@ -4,7 +4,7 @@ from monobd.models.qr.qr_code import QRCode
 
 
 @pytest.mark.parametrize(
-    ("variant_name", "expected_plate_size"),
+    ("preset_name", "expected_plate_size"),
     [
         pytest.param(None, 58.0, id="default"),
         pytest.param("small", 43.0, id="small"),
@@ -12,9 +12,9 @@ from monobd.models.qr.qr_code import QRCode
     ],
 )
 def test_qr_code_plate_size(
-    variant_name: str | None, expected_plate_size: float
+    preset_name: str | None, expected_plate_size: float
 ) -> None:
-    model = QRCode.with_preset(variant_name)
+    model = QRCode.with_preset(preset_name)
     assert isinstance(model, QRCode)
     assert model.plate_size == pytest.approx(expected_plate_size)
 
