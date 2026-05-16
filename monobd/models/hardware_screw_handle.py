@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from bdbox import Choice, Model
+from bdbox import Choice, Int, Model
 from build123d import (
     IN,
     MM,
@@ -123,6 +123,8 @@ class ScrewHandle(Model):
     screw_hole_depth: float = 0
     screw_hole_countersink_angle: float = 60
 
+    alpha: int = Int(0xCC, min=0x88, max=0xFF, step=1)
+
     @classmethod
     def variants(cls) -> dict[str, dict[str, Any]]:
         return {
@@ -172,5 +174,5 @@ class ScrewHandle(Model):
                         mode=Mode.SUBTRACT,
                     )
         p.part.label = "handle"
-        p.part.color = Color(0x00BBFF, alpha=0xCC)
+        p.part.color = Color(0x00BBFF, alpha=self.alpha)
         return p.part
