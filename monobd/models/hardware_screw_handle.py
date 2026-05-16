@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import math
-from typing import Any
 
-from bdbox import Choice, Model
+from bdbox import Choice, Int, Model, Preset
 from build123d import (
     IN,
     MM,
@@ -122,21 +121,16 @@ class ScrewHandle(Model):
     )
     screw_hole_depth: float = 0
     screw_hole_countersink_angle: float = 60
-
-    @classmethod
-    def variants(cls) -> dict[str, dict[str, Any]]:
-        return {
-            "default": {},
-            "tray": {
-                "screw_hole_depth": (1 / 4 + 1 / 16) * IN,
-                "screw_size": (9 / 64),
-                "screw_hole_countersink_angle": None,
-            },
-            "thin": {
-                "thickness": (9 / IN) * MM,
-                "screw_hole_countersink_angle": None,
-            },
-        }
+    alpha: int = Int(0xCC, min=0x88, max=0xFF, step=1)
+    presets = (
+        Preset(
+            "tray",
+            screw_hole_depth=(1 / 4 + 1 / 16),
+            screw_size=(9 / 64),
+            screw_hole_countersink_angle=0,
+        ),
+        Preset("thin", screw_size=(9 / 64), thickness=(9 / IN) * MM),
+    )
 
     def build(self) -> Compound:
         with BuildPart() as p:
@@ -149,7 +143,11 @@ class ScrewHandle(Model):
             with (
                 GridLocations(self.length * IN, 0, 2, 1),
                 Locations(
-                    (0, 0, self.screw_hole_depth or (self.height * IN) / 2)
+                    (
+                        0,
+                        0,
+                        (self.screw_hole_depth * IN) or (self.height * IN) / 2,
+                    )
                 ),
             ):
                 if self.screw_style == "counter_sink":
@@ -172,5 +170,5 @@ class ScrewHandle(Model):
                         mode=Mode.SUBTRACT,
                     )
         p.part.label = "handle"
-        p.part.color = Color(0x00BBFF, alpha=0xCC)
+        p.part.color = Color(0x00BBFF, alpha=self.alpha)
         return p.part
