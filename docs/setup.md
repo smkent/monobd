@@ -33,7 +33,6 @@ enable it for `smkent/monobd`.
 [Settings → Pages][repo-settings-pages] → Source → GitHub Actions
 
 [renovate]: https://github.com/apps/renovate
-[repo-releases]: https://github.com/smkent/monobd/releases
 [repo-settings]: https://github.com/smkent/monobd/settings
 [repo-settings-branches]: https://github.com/smkent/monobd/settings/branches
 [repo-settings-pages]: https://github.com/smkent/monobd/settings/pages
