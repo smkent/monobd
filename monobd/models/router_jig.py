@@ -95,7 +95,7 @@ class RouterJig(Model):
         ),
     )
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         size = self.size_in * IN
         corner_radius = self.corner_radius_in * IN
         corner_space = self.corner_space_in * IN + corner_radius

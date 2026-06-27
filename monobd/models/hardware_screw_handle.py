@@ -133,7 +133,7 @@ class ScrewHandle(Model):
         Preset("thin", screw_size=(9 / 64), thickness=(9 / IN) * MM),
     )
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         with BuildPart() as p:
             HandleBody(
                 length=self.length * IN,

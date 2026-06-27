@@ -24,7 +24,7 @@ class EMTExtension(Model):
     chamfer: float = (1 / 8) * IN
     slop: float = (1 / 32) * IN
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         with BuildPart() as p:
             with BuildSketch():
                 Circle(self.diameter + 1 / 4 * IN * 0)

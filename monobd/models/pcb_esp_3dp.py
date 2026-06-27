@@ -267,7 +267,7 @@ class ESP3DP(Model, PCBGrid):
             return self.edge_chamfer
         raise Exception(f"Unknown base style {self.base_style}")  # noqa: TRY002
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         with BuildPart() as p:
             with BuildSketch():
                 RectangleRounded(

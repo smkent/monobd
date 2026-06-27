@@ -28,7 +28,7 @@ class ShelfFoot(Model):
     screw_size: float = (3 / 16) * IN
     slop: float = (1 / 32) * IN
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         width = self.diameter + self.screw_size * 6
         spread = width - self.screw_size * 3
         screw_rows = 2 if self.length > self.screw_size * 8 else 1
@@ -78,7 +78,7 @@ class PictureFrame(Model):
     frame_thick: float = 1 / 4 * IN
     thickness: float = 5 * MM
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         with BuildPart() as p:
             with BuildSketch():
                 RectangleRounded(
