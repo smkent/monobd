@@ -18,7 +18,7 @@ project_name: monobd
 project_slug: monobd
 project_type: library
 project_visibility: public
-python_version_maximum: '3.12'
+python_version_maximum: No maximum
 python_version_minimum: '3.10'
 template_attribution: true
 user_email: smkent@smkent.net
