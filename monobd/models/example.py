@@ -17,7 +17,7 @@ class ExampleModel(Model):
     height_factor: int = 1
     presets = (Preset("tall", height_factor=2),)
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         with BuildPart() as p:
             Box(
                 10,

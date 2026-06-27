@@ -184,7 +184,7 @@ class PoopBagDispenserWallMount(Model):
     thickness: float = (1 / 8 + 1 / 32) * IN
     screw_size: float = (3 / 16) * IN
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         with BuildPart() as p:
             DispenserBody(
                 radius=self.diameter / 2,

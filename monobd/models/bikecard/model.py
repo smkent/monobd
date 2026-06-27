@@ -127,7 +127,7 @@ class BikeCardModel(Model):
     svg: str = "immortan-joe.svg"
     presets = (Preset("bagtag", width=3.75, height=1.55, style=Style.BAGTAG),)
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         width_in = self.width * IN
         height_in = self.height * IN
         with BuildPart() as p:

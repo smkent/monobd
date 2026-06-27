@@ -86,7 +86,7 @@ class QRCode(Model):
         qr.make(fit=True)
         return cast("list[list[bool]]", qr.get_matrix())
 
-    def build(self) -> Model.Build:  # noqa: C901
+    def build(self) -> Model.Geometry:  # noqa: C901
         matrix = self._qr_matrix()
         n = len(matrix)
         module_size = self.size / n

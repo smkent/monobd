@@ -55,7 +55,7 @@ class AVRack(Model):
             ),
         ]
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         frame = RackFrame()
         trays = [
             RackTray(

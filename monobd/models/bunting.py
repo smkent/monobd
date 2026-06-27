@@ -222,7 +222,7 @@ class BuntingPoles(Model):
         ),
     )
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         cap = self.top_cap()
         cap.color = Color(0xEEEEEE, 0xFF)
         cap.label = "Cap"

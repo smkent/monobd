@@ -312,7 +312,7 @@ class ZigbeeModel(Model):
             Location((placement_location.position.X, 0, 0))
         )
 
-    def build(self) -> Model.Build:
+    def build(self) -> Model.Geometry:
         return Compound(
             label="zigbee_door_sensor_mount",
             children=[
