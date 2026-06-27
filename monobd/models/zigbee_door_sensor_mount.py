@@ -67,6 +67,8 @@ class DoubleEndedScrewHole(BasePartObject):
                 mode=Mode.ADD,
             )
             mirror(hole, about=Plane.XY)
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -102,6 +104,8 @@ class SensorMountCover(BasePartObject):
                 )
             fillet(p.edges().filter_by(Axis.Z), radius=thickness * 2)
             chamfer(p.edges().group_by(Axis.Z)[0], thickness)
+            if not p.part:
+                raise RuntimeError("Empty part")
             with Locations(Plane.XY.offset(p.part.bounding_box().size.Z)):
                 Box(
                     sensor_size[0] - fit,
@@ -217,6 +221,8 @@ class SensorMountCase(BasePartObject):
                     depth=depth,
                     mode=Mode.SUBTRACT,
                 )
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -306,7 +312,7 @@ class ZigbeeModel(Model):
             Location((placement_location.position.X, 0, 0))
         )
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:
         return Compound(
             label="zigbee_door_sensor_mount",
             children=[

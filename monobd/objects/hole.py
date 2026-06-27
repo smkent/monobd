@@ -51,6 +51,8 @@ class PrintableCounterBoreHole(BasePartObject):
                     mode=Mode.SUBTRACT,
                 )
             extrude(sk.sketch, amount=-0.4, mode=Mode.SUBTRACT)
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )

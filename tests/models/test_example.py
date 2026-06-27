@@ -1,4 +1,5 @@
 import pytest
+from build123d import Compound
 
 from monobd.models.example import ExampleModel
 
@@ -15,6 +16,7 @@ def test_example_model(
 ) -> None:
     model = ExampleModel.with_preset(preset=preset)
     assembly = model.build()
+    assert isinstance(assembly, Compound)
     assert len(assembly.leaves) == 2
     bounding_box = assembly.bounding_box()
     assert list(bounding_box.size) == pytest.approx(expected_size)

@@ -95,7 +95,7 @@ class RouterJig(Model):
         ),
     )
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:
         size = self.size_in * IN
         corner_radius = self.corner_radius_in * IN
         corner_space = self.corner_space_in * IN + corner_radius
@@ -256,6 +256,8 @@ class RouterJig(Model):
                     self.grip_height_in * IN * 0.999,
                 )
 
+        if not p.part:
+            raise RuntimeError("Empty part")
         p.part.label = "Router Jig"
         p.part.color = Color(0xB0EB00)
         return Compound(children=[p.part])

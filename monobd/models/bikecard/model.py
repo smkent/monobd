@@ -14,7 +14,6 @@ from build123d import (
     BuildSketch,
     Circle,
     Color,
-    Compound,
     GridLocations,
     Mode,
     Plane,
@@ -128,7 +127,7 @@ class BikeCardModel(Model):
     svg: str = "immortan-joe.svg"
     presets = (Preset("bagtag", width=3.75, height=1.55, style=Style.BAGTAG),)
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:
         width_in = self.width * IN
         height_in = self.height * IN
         with BuildPart() as p:
@@ -139,10 +138,7 @@ class BikeCardModel(Model):
                     FRAME_THICK * 2.5,
                 )
             extrude(amount=FRAME_HEIGHT * 2 + CARD_THICK)
-            chamfer(
-                p.edges().group_by(Axis.Z)[:],
-                1.0 * MM,
-            )
+            chamfer(list(p.edges().group_by(Axis.Z)), 1.0 * MM)
             with BuildSketch():
                 width = width_in
                 if self.style == Style.BAGTAG:
@@ -164,6 +160,8 @@ class BikeCardModel(Model):
             with BuildSketch(Plane.XY.offset(FRAME_HEIGHT + CARD_THICK)):
                 FrontCutoutShape(width_in, height_in, CARD_FIT)
             extrude(amount=FRAME_HEIGHT, mode=Mode.SUBTRACT)
+        if not p.part:
+            raise RuntimeError("Empty part")
         p.part.label = "frame"
         p.part.color = Color(0x3388FF, alpha=0xFF)
         return p.part

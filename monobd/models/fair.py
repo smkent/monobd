@@ -28,7 +28,7 @@ class ShelfFoot(Model):
     screw_size: float = (3 / 16) * IN
     slop: float = (1 / 32) * IN
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:
         width = self.diameter + self.screw_size * 6
         spread = width - self.screw_size * 3
         screw_rows = 2 if self.length > self.screw_size * 8 else 1
@@ -65,6 +65,8 @@ class ShelfFoot(Model):
                     radius=self.screw_size / 2,
                     counter_sink_radius=self.screw_size,
                 )
+        if not p.part:
+            raise RuntimeError("Empty part")
         p.part.label = "shelf-foot"
         p.part.color = Color(0x33CC66, alpha=0xCC)
         return Compound(label="fair_shelf_foot", children=[p.part])
@@ -76,7 +78,7 @@ class PictureFrame(Model):
     frame_thick: float = 1 / 4 * IN
     thickness: float = 5 * MM
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:
         with BuildPart() as p:
             with BuildSketch():
                 RectangleRounded(
@@ -96,6 +98,8 @@ class PictureFrame(Model):
                     self.width,
                 )
             extrude(amount=self.thickness / 2, mode=Mode.SUBTRACT)
+        if not p.part:
+            raise RuntimeError("Empty part")
         p.part.label = "picture-frame"
         p.part.color = Color(0x3399CC, alpha=0xCC)
         return Compound(label="fair_picture_frame", children=[p.part])
