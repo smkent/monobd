@@ -1,4 +1,5 @@
 import pytest
+from build123d import Compound
 
 from monobd.models.qr.qr_code import QRCode
 
@@ -22,6 +23,7 @@ def test_qr_code_plate_size(
 def test_qr_code_assembly() -> None:
     model = QRCode()
     assembly = model.build()
+    assert isinstance(assembly, Compound)
     assert len(assembly.leaves) == 2
     bb = assembly.bounding_box()
     assert pytest.approx(58.0) == bb.size.X

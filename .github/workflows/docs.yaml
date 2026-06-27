@@ -26,10 +26,10 @@ jobs:
           fetch-depth: 0
 
       - name: 🦀 Set up Python project with uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v8.2.0
         with:
           enable-cache: true
-          python-version: '3.12'
+          python-version: '3.14'
 
       - name: 🐍 Install dependencies
         run: uv sync

@@ -74,6 +74,8 @@ class RackHoles(BasePartObject):
             with BuildSketch() as sk, Locations(*all_u), Locations(*per_u):
                 RectangleRounded(2 / 5 * IN, 1 / 4 * IN, radius=(7 / 64 * IN))
             extrude(sk.sketch, amount=hole_depth)
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -115,7 +117,9 @@ class RackFrameHalf(BasePartObject):
                     (shift_direction * (part_width / 2 - holes_inset), 0, 0)
                 ):
                     RackHoles(mode=Mode.SUBTRACT)
-                chamfer(face_plate.edges(Select.LAST).group_by(Axis.Z)[:], 0.4)
+                chamfer(
+                    list(face_plate.edges(Select.LAST).group_by(Axis.Z)), 0.4
+                )
 
                 back_width = part_width - abs(part_shift * 2)
                 with (
@@ -170,7 +174,7 @@ class RackFrameHalf(BasePartObject):
                 amount=constants.FACE_THICKNESS + constants.THICKNESS * 10,
                 mode=Mode.SUBTRACT,
             )
-            chamfer(p.edges(Select.LAST).group_by(Axis.Z)[:], 1)
+            chamfer(list(p.edges(Select.LAST).group_by(Axis.Z)), 1)
 
             if half == RackMountWhichHalf.LEFT:
                 ff = tray_cutout.faces().group_by(Axis.X)[-1]
@@ -202,7 +206,7 @@ class RackFrameHalf(BasePartObject):
                         mode=Mode.PRIVATE,
                     )
                     mirror(hh, about=Plane(ff[0]), mode=Mode.SUBTRACT)
-                    chamfer(p.edges(Select.LAST).group_by(Axis.X)[:], 1)
+                    chamfer(list(p.edges(Select.LAST).group_by(Axis.X)), 1)
 
             # Tray screw holes
             with GridLocations(
@@ -215,8 +219,10 @@ class RackFrameHalf(BasePartObject):
                     radius=constants.SCREW_INSERT_DIAMETER / 2,
                     mode=Mode.SUBTRACT,
                 )
-                chamfer(p.edges(Select.LAST).group_by(Axis.Z)[:], 1)
+                chamfer(list(p.edges(Select.LAST).group_by(Axis.Z)), 1)
 
+        if not p.part:
+            raise RuntimeError("Empty part")
         p.part.label = f"half-{half.name.lower()}"
         super().__init__(
             part=p.part,

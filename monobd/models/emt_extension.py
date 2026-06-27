@@ -9,7 +9,6 @@ from build123d import (
     BuildSketch,
     Circle,
     Color,
-    Compound,
     Cylinder,
     Mode,
     Plane,
@@ -25,7 +24,7 @@ class EMTExtension(Model):
     chamfer: float = (1 / 8) * IN
     slop: float = (1 / 32) * IN
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:
         with BuildPart() as p:
             with BuildSketch():
                 Circle(self.diameter + 1 / 4 * IN * 0)
@@ -38,7 +37,9 @@ class EMTExtension(Model):
                 mode=Mode.SUBTRACT,
                 align=(Align.CENTER, Align.CENTER, Align.MIN),
             )
-            chamfer(p.edges().group_by(Axis.Z)[:], self.chamfer)
+            chamfer(list(p.edges().group_by(Axis.Z)), self.chamfer)
+        if not p.part:
+            raise RuntimeError("Empty part")
         p.part.label = "emt_extension"
         p.part.color = Color(0x11AA88, alpha=0xCC)
         return p.part

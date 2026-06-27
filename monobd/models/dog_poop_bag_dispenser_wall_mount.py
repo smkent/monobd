@@ -15,7 +15,6 @@ from build123d import (
     BuildSketch,
     Circle,
     Color,
-    Compound,
     CounterSinkHole,
     GridLocations,
     Locations,
@@ -127,6 +126,8 @@ class DispenserCutout(BasePartObject):
                 )
                 mirror(sk.sketch, about=Plane.XZ)
             extrude(amount=radius * 2)
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -169,6 +170,8 @@ class DispenserBody(BasePartObject):
             with Locations((0, radius * 2, width / 2)):
                 DispenserCutout(width=width, radius=radius, mode=Mode.SUBTRACT)
             fillet(p.edges(Select.LAST), radius=1)
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -181,7 +184,7 @@ class PoopBagDispenserWallMount(Model):
     thickness: float = (1 / 8 + 1 / 32) * IN
     screw_size: float = (3 / 16) * IN
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:
         with BuildPart() as p:
             DispenserBody(
                 radius=self.diameter / 2,
@@ -199,6 +202,8 @@ class PoopBagDispenserWallMount(Model):
                     radius=self.screw_size / 2,
                     counter_sink_radius=self.screw_size,
                 )
+        if not p.part:
+            raise RuntimeError("Empty part")
         p.part.label = "dispenser"
         p.part.color = Color(0x33CC66, alpha=0xCC)
         return p.part

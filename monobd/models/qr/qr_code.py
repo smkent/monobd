@@ -86,7 +86,7 @@ class QRCode(Model):
         qr.make(fit=True)
         return cast("list[list[bool]]", qr.get_matrix())
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:  # noqa: C901
         matrix = self._qr_matrix()
         n = len(matrix)
         module_size = self.size / n
@@ -108,6 +108,8 @@ class QRCode(Model):
                 p_base.edges().filter_by(Plane.XY).group_by(Axis.Z)[0],
                 self.edge_chamfer,
             )
+        if not p_base.part:
+            raise RuntimeError("Empty base part")
         p_base.part.label = "base"
         p_base.part.color = Color(0xFFFFFF, alpha=0xFF)
 
@@ -225,6 +227,8 @@ class QRCode(Model):
                         mode=Mode.ADD,
                     )
             extrude(amount=self.module_height)
+        if not p_modules.part:
+            raise RuntimeError("Empty modules part")
         p_modules.part.label = "modules"
         p_modules.part.color = Color(0x111111, alpha=0xFF)
 

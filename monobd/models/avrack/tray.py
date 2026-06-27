@@ -88,6 +88,8 @@ class RackTrayFront(BasePartObject):
                     sp = SVGSketch(file_name=image_file, size=image_space)
                 extrude(sp, amount=0.8, mode=Mode.SUBTRACT)
 
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -181,6 +183,8 @@ class RackTrayBody(BasePartObject):
                         mode=Mode.SUBTRACT,
                     )
 
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -253,6 +257,8 @@ class RackTrayBack(BasePartObject):
                     ),
                     mode=Mode.SUBTRACT,
                 )
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -299,6 +305,8 @@ class RackTray(Compound):
             cutout_edges = body.edges(Select.LAST).group_by(Axis.Z)
             chamfer(cutout_edges[0], length=1 * MM)
             chamfer(cutout_edges[-1], length=0.4 * MM)
+        if not body.part:
+            raise RuntimeError("Empty part")
         body.part.label = "body"
         with (
             BuildPart() as back,
@@ -310,5 +318,7 @@ class RackTray(Compound):
                 cutout_size,
                 align=(Align.CENTER, Align.CENTER, Align.MAX),
             )
+        if not back.part:
+            raise RuntimeError("Empty part")
         back.part.label = "back"
         super().__init__(label=label, children=[body.part, back.part])

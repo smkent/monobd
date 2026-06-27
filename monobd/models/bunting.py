@@ -84,6 +84,8 @@ class Pipe(BasePartObject):
                 Circle(out_d / 2)
                 Circle(in_d / 2, mode=Mode.SUBTRACT)
             extrude(sk.sketch, length)
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -138,9 +140,11 @@ class CapLoop(BasePartObject):
                             ),
                         )
                         scale(by=(0.47, 1.0, 1.0))
-            sweep(path=ln)
+            sweep(path=ln)  # ty: ignore[invalid-argument-type]
             if angle != 180:
                 chamfer(p.edges().group_by(Axis.Z)[-1], edge_len)
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -175,6 +179,8 @@ class PVCCoupling(BasePartObject):
             ) as sk:
                 Circle(out_d / 2)
             extrude(sk.sketch, coupling_overlap_length, mode=Mode.SUBTRACT)
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -216,7 +222,7 @@ class BuntingPoles(Model):
         ),
     )
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:
         cap = self.top_cap()
         cap.color = Color(0xEEEEEE, 0xFF)
         cap.label = "Cap"
@@ -251,7 +257,7 @@ class BuntingPoles(Model):
                     align=(Align.CENTER, Align.MIN, Align.CENTER),
                     mode=Mode.SUBTRACT,
                 )
-            chamfer(p.edges().group_by(Axis.Z)[:], 1 * MM)
+            chamfer(list(p.edges().group_by(Axis.Z)), 1 * MM)
             with BuildSketch() as sk:
                 Circle((1 / 4 * IN + fit) / 2)
             extrude(sk.sketch, height, mode=Mode.SUBTRACT)
@@ -264,8 +270,10 @@ class BuntingPoles(Model):
             extrude(sk.sketch, square_thick, mode=Mode.SUBTRACT)
             chamfer(p.edges(Select.LAST).group_by(Axis.Z)[0], 1 * MM)
 
-        p.label = "thumb_screw"
-        p.color = Color(0x88FF22, 0x99)
+        if not p.part:
+            raise RuntimeError("Empty part")
+        p.part.label = "thumb_screw"
+        p.part.color = Color(0x88FF22, 0x99)
         return p.part
 
     def top_cap(self) -> Part:
@@ -309,7 +317,7 @@ class BuntingPoles(Model):
                         align=[Align.CENTER, Align.CENTER, Align.MIN],
                         mode=Mode.SUBTRACT,
                     )
-            chamfer(p.edges().group_by(Axis.Z)[:], edge_len)
+            chamfer(list(p.edges().group_by(Axis.Z)), edge_len)
             # Center cutout pattern
             with BuildSketch() as sk:
                 wd = 1 / 4 * IN
@@ -368,6 +376,8 @@ class BuntingPoles(Model):
                             Align.CENTER,
                         ),
                     )
+        if not p.part:
+            raise RuntimeError("Empty part")
         p.part.label = "Cap"
         p.part.color = Color(0x2288FF, 0x99)
         return p.part
@@ -405,7 +415,7 @@ class BuntingPoles(Model):
             if self.jig_interior:
                 edges = first_and_last(p.edges().group_by(Axis.Z))
             else:
-                edges = p.edges().group_by(Axis.Z)[:]
+                edges = list(p.edges().group_by(Axis.Z))
             chamfer(edges, edge_len)
             faces = [
                 Plane(p.faces().group_by(Axis.X)[0][0]).reverse(),
@@ -421,4 +431,6 @@ class BuntingPoles(Model):
                     rotation=(0, 0, 0),
                     align=(Align.CENTER, Align.CENTER, Align.MIN),
                 )
+        if not p.part:
+            raise RuntimeError("Empty part")
         return p.part

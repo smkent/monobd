@@ -13,7 +13,6 @@ from build123d import (
     BuildSketch,
     Circle,
     Color,
-    Compound,
     CounterSinkHole,
     GridLocations,
     Hole,
@@ -143,6 +142,8 @@ class ScrewPylon(BasePartObject):
                 RectangleRounded(top_sz, top_sz, radius)
             loft()
 
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -180,6 +181,8 @@ class ScrewPylons(BasePartObject):
                 )
             extrude(amount=height, mode=Mode.INTERSECT)
 
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -214,6 +217,8 @@ class BaseCutout(BasePartObject):
                 else:
                     raise Exception(f'Unknown shape "{shape}"')  # noqa: TRY002
             extrude(amount=thickness)
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -262,7 +267,7 @@ class ESP3DP(Model, PCBGrid):
             return self.edge_chamfer
         raise Exception(f"Unknown base style {self.base_style}")  # noqa: TRY002
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:
         with BuildPart() as p:
             with BuildSketch():
                 RectangleRounded(
@@ -308,6 +313,8 @@ class ESP3DP(Model, PCBGrid):
                     self.mounting_screw_hole_d / 2, self.mounting_screw_hole_d
                 )
 
+        if not p.part:
+            raise RuntimeError("Empty part")
         p.part.label = "base"
         p.part.color = Color(0x00FF22, alpha=0x99)
         return p.part

@@ -115,6 +115,8 @@ class BodyHalf(BasePartObject):
                 pitch=Const.thread_pitch,
             )
 
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -166,7 +168,7 @@ class FixtureInsert(BasePartObject):
                 fillet(sk.vertices(), Const.thickness)
             extrude(amount=Const.thread_height * 2, mode=Mode.SUBTRACT)
             chamfer(
-                p.edges(Select.LAST).group_by(Axis.Z)[:],
+                list(p.edges(Select.LAST).group_by(Axis.Z)),
                 Const.thickness,
             )
 
@@ -177,10 +179,12 @@ class FixtureInsert(BasePartObject):
                     align=(Align.CENTER, Align.CENTER, Align.MIN),
                 )
             chamfer(
-                p.edges(Select.LAST).group_by(Axis.Z)[:],
+                list(p.edges(Select.LAST).group_by(Axis.Z)),
                 Const.thickness * 0.99,
             )
 
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -205,6 +209,8 @@ class USBPortCutout(BasePartObject):
                 Rectangle(width, height)
                 fillet(sk.vertices(), curve)
             extrude(amount=-Const.thickness * 3)
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -240,7 +246,9 @@ class RGBLight(Model):
                         p_int.edges(Select.LAST).group_by(Axis.Z)[0],
                         Const.base_height / 3,
                     )
-            chamfer(fixture_base.edges(Select.LAST).group_by(Axis.Z)[:], 0.6)
+            chamfer(
+                list(fixture_base.edges(Select.LAST).group_by(Axis.Z)), 0.6
+            )
 
             # USB port
             with Locations(
@@ -270,29 +278,38 @@ class RGBLight(Model):
                     align=(Align.CENTER, Align.CENTER, Align.MAX),
                 )
 
-        fixture_base.part.label = "base"
-        fixture_base.part.color = Color(0x11AACC, alpha=0xCC)
+        fixture_base_part = fixture_base.part
+        if not fixture_base_part:
+            raise RuntimeError("Empty fixture base part")
+        fixture_base_part.label = "base"
+        fixture_base_part.color = Color(0x11AACC, alpha=0xCC)
 
         with BuildPart() as fixture_insert:
             FixtureInsert()
-        fixture_insert.part.label = "insert"
-        fixture_insert.part.color = Color(0x11CC88, alpha=0xCC)
-        fixture_insert.part = fixture_insert.part.move(
+        fixture_insert_part = fixture_insert.part
+        if not fixture_insert_part:
+            raise RuntimeError("Empty fixture insert part")
+        fixture_insert_part.label = "insert"
+        fixture_insert_part.color = Color(0x11CC88, alpha=0xCC)
+        fixture_insert_part = fixture_insert_part.move(
             Location((0, 0, Const.base_height - Const.thread_height))
         )
 
         with BuildPart() as fixture_diffuser:
             BodyHalf(height=Const.led_mount_height)
-        fixture_diffuser.part.label = "diffuser"
-        fixture_diffuser.part.color = Color(0xDDDDDD, alpha=0xCC)
-        fixture_diffuser.part = fixture_diffuser.part.move(
+        fixture_diffuser_part = fixture_diffuser.part
+        if not fixture_diffuser_part:
+            raise RuntimeError("Empty fixture diffuser part")
+        fixture_diffuser_part.label = "diffuser"
+        fixture_diffuser_part.color = Color(0xDDDDDD, alpha=0xCC)
+        fixture_diffuser.part = fixture_diffuser_part.move(
             Location((0, 0, Const.base_height))
         )
 
         return Compound(
             children=[
-                fixture_base.part,
-                fixture_insert.part,
-                fixture_diffuser.part,
+                fixture_base_part,
+                fixture_insert_part,
+                fixture_diffuser_part,
             ],
         )

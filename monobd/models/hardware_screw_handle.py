@@ -14,7 +14,6 @@ from build123d import (
     BuildPart,
     BuildSketch,
     Color,
-    Compound,
     CounterBoreHole,
     CounterSinkHole,
     GridLocations,
@@ -105,6 +104,8 @@ class HandleBody(BasePartObject):
                     thickness / 6,
                 )
 
+        if not p.part:
+            raise RuntimeError("Empty part")
         super().__init__(
             part=p.part, rotation=rotation, align=align, mode=mode
         )
@@ -132,7 +133,7 @@ class ScrewHandle(Model):
         Preset("thin", screw_size=(9 / 64), thickness=(9 / IN) * MM),
     )
 
-    def build(self) -> Compound:
+    def build(self) -> Model.Build:
         with BuildPart() as p:
             HandleBody(
                 length=self.length * IN,
@@ -169,6 +170,8 @@ class ScrewHandle(Model):
                         counter_bore_depth=0,
                         mode=Mode.SUBTRACT,
                     )
+        if not p.part:
+            raise RuntimeError("Empty part")
         p.part.label = "handle"
         p.part.color = Color(0x00BBFF, alpha=self.alpha)
         return p.part
