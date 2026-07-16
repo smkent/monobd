@@ -31,7 +31,7 @@ classifiers = [
 keywords = []
 dependencies = [
     "bd-warehouse>=0.2",
-    "bdbox>=0.21.0",
+    "bdbox>=0.22.0",
     "qrcode>=8.2,<9.0",
 ]
 

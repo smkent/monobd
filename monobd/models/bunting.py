@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from operator import itemgetter
 
-from bdbox import Model, Preset
+from bdbox import Inches, Model, Preset
 from build123d import (
     IN,
     MM,
@@ -76,13 +76,10 @@ class Pipe(BasePartObject):
         ),
         mode: Mode = Mode.ADD,
     ) -> None:
-        out_d = outer_diameter
-        in_d = inner_diameter
-
         with BuildPart() as p:
             with BuildSketch() as sk:
-                Circle(out_d / 2)
-                Circle(in_d / 2, mode=Mode.SUBTRACT)
+                Circle(outer_diameter / 2)
+                Circle(inner_diameter / 2, mode=Mode.SUBTRACT)
             extrude(sk.sketch, length)
         if not p.part:
             raise RuntimeError("Empty part")
@@ -164,20 +161,20 @@ class PVCCoupling(BasePartObject):
         ),
         mode: Mode = Mode.ADD,
     ) -> None:
-        out_d = outer_diameter
-        coupling_out_d = coupling_outer_diameter
         coupling_overlap_length = COUPLING_OVERLAP_LENGTH
 
         with BuildPart() as p:
             with BuildSketch() as sk:
-                Circle(coupling_out_d / 2)
-                Circle((out_d - (1 / 10 * IN)) / 2, mode=Mode.SUBTRACT)
-                # Circle(out_d / 2, mode=Mode.SUBTRACT)  # noqa: ERA001
+                Circle(coupling_outer_diameter / 2)
+                Circle(
+                    (outer_diameter - (1 / 10 * IN)) / 2, mode=Mode.SUBTRACT
+                )
+                # Circle(outer_diameter / 2, mode=Mode.SUBTRACT)  # noqa: E501, ERA001
             extrude(sk.sketch, coupling_length)
             with BuildSketch(
                 Plane.XY, Plane.XY.offset(coupling_length).reverse()
             ) as sk:
-                Circle(out_d / 2)
+                Circle(outer_diameter / 2)
             extrude(sk.sketch, coupling_overlap_length, mode=Mode.SUBTRACT)
         if not p.part:
             raise RuntimeError("Empty part")
@@ -187,36 +184,36 @@ class PVCCoupling(BasePartObject):
 
 
 class BuntingPoles(Model):
-    outer_diameter_in = 1.9
-    inner_diameter_in = 1.59
-    coupling_length_in = 2.7
-    coupling_outer_diameter_in = 2.215
+    outer_diameter = Inches(1.9)
+    inner_diameter = Inches(1.59)
+    coupling_length = Inches(2.7)
+    coupling_outer_diameter = Inches(2.215)
 
-    cap_add_d_in: float = 1 / 4 - 1 / 32
-    end_thick_in: float = 1 / 4
+    cap_add_d: float = Inches(1 / 4 - 1 / 32)
+    end_thick: float = Inches(1 / 4)
     jig_fit: float = 1 / 3
     jig_interior: bool = True
 
     presets = (
         Preset(
             "1.5inch_pvc",
-            outer_diameter_in=1.9,
-            inner_diameter_in=1.59,
-            coupling_length_in=2.7,
-            coupling_outer_diameter_in=2.215,
-            cap_add_d_in=(1 / 4 - 1 / 32),
-            end_thick_in=1 / 4,
+            outer_diameter=1.9,
+            inner_diameter=1.59,
+            coupling_length=2.7,
+            coupling_outer_diameter=2.215,
+            cap_add_d=(1 / 4 - 1 / 32),
+            end_thick=1 / 4,
             jig_fit=1 / 3,
             jig_interior=True,
         ),
         Preset(
             "2inch_pvc",
-            outer_diameter_in=2.375,
-            inner_diameter_in=2.067,
-            coupling_length_in=2.87,
-            coupling_outer_diameter_in=2.71,
-            cap_add_d_in=1 / 4,
-            end_thick_in=1 / 8,
+            outer_diameter=2.375,
+            inner_diameter=2.067,
+            coupling_length=2.87,
+            coupling_outer_diameter=2.71,
+            cap_add_d=1 / 4,
+            end_thick=1 / 8,
             jig_fit=0.25,
             jig_interior=False,
         ),
@@ -248,11 +245,9 @@ class BuntingPoles(Model):
             extrude(sk.sketch, height)
             with Locations((0, 0, height - (0.3 * IN) / 2)):
                 PVCCoupling(
-                    outer_diameter=self.outer_diameter_in * IN,
-                    coupling_outer_diameter=(
-                        self.coupling_outer_diameter_in * IN
-                    ),
-                    coupling_length=self.coupling_length_in * IN,
+                    outer_diameter=self.outer_diameter,
+                    coupling_outer_diameter=(self.coupling_outer_diameter),
+                    coupling_length=self.coupling_length,
                     rotation=(90, 0, 0),
                     align=(Align.CENTER, Align.MIN, Align.CENTER),
                     mode=Mode.SUBTRACT,
@@ -279,10 +274,7 @@ class BuntingPoles(Model):
     def top_cap(self) -> Part:
         cap_len = CAP_LEN
         cap_base_thick = CAP_BASE_THICK
-        cap_add_d = self.cap_add_d_in * IN
         edge_len = EDGE_LEN
-        out_d = self.outer_diameter_in * IN
-        in_d = self.inner_diameter_in * IN
         pipe_fit = PIPE_FIT
         fit = FIT
         screw_hole_count = 3
@@ -290,12 +282,15 @@ class BuntingPoles(Model):
         with BuildPart() as p:
             # Base
             with BuildSketch() as sk:
-                Circle((out_d + cap_add_d) / 2)
+                Circle((self.outer_diameter + self.cap_add_d) / 2)
             extrude(sk.sketch, cap_base_thick)
             # Interior cutout
             with BuildSketch(Plane.XY.offset(cap_base_thick)) as sk:
-                Circle((out_d + cap_add_d) / 2)
-                Circle((in_d - cap_add_d) / 2, mode=Mode.SUBTRACT)
+                Circle((self.outer_diameter + self.cap_add_d) / 2)
+                Circle(
+                    (self.inner_diameter - self.cap_add_d) / 2,
+                    mode=Mode.SUBTRACT,
+                )
             extrude(sk.sketch, cap_len)
             # Grip cutout
             with (
@@ -303,16 +298,16 @@ class BuntingPoles(Model):
                 Locations((0, 0, cap_base_thick)),
             ):
                 Cone(
-                    (out_d - 0 * pipe_fit / 10) / 2,
-                    (out_d + pipe_fit) / 2,
+                    (self.outer_diameter - 0 * pipe_fit / 10) / 2,
+                    (self.outer_diameter + pipe_fit) / 2,
                     cap_base_thick + cap_len,
                     align=(Align.CENTER, Align.CENTER, Align.MIN),
                 )
                 # Interior grip
                 if False:
                     Cone(
-                        (in_d + 0 * pipe_fit / 10) / 2,
-                        (in_d - pipe_fit) / 2,
+                        (self.inner_diameter + 0 * pipe_fit / 10) / 2,
+                        (self.inner_diameter - pipe_fit) / 2,
                         cap_base_thick + cap_len,
                         align=[Align.CENTER, Align.CENTER, Align.MIN],
                         mode=Mode.SUBTRACT,
@@ -322,20 +317,25 @@ class BuntingPoles(Model):
             with BuildSketch() as sk:
                 wd = 1 / 4 * IN
                 with Locations([(wd * i, 0, 0) for i in range(-5, 5)]):
-                    Rectangle(wd / 2, out_d * 2)
-                Circle((in_d - cap_add_d) / 2 - edge_len, mode=Mode.INTERSECT)
+                    Rectangle(wd / 2, self.outer_diameter * 2)
+                Circle(
+                    (self.inner_diameter - self.cap_add_d) / 2 - edge_len,
+                    mode=Mode.INTERSECT,
+                )
             extrude(sk.sketch, cap_base_thick, mode=Mode.SUBTRACT)
             # Attachment loops
             edges = []
             locs = PolarLocations(
-                (out_d + cap_add_d) / 2 - 1 * MM, 6
+                (self.outer_diameter + self.cap_add_d) / 2 - 1 * MM, 6
             ).local_locations
             with Locations((0, 0, edge_len * 2)):
                 with Locations(locs[1:3] + locs[4:6]):
                     CapLoop()
                 edges += p.edges(Select.LAST).filter_by(GeomType.BSPLINE)
                 with (
-                    PolarLocations((out_d + cap_add_d) / 2 - 1 * MM, 2),
+                    PolarLocations(
+                        (self.outer_diameter + self.cap_add_d) / 2 - 1 * MM, 2
+                    ),
                     Locations((0, 0, cap_len - edge_len)),
                 ):
                     CapLoop(
@@ -354,7 +354,7 @@ class BuntingPoles(Model):
                 ht = cap_len + cap_base_thick
                 with (
                     PolarLocations(
-                        (out_d + cap_add_d) / 2 - 1 * MM,
+                        (self.outer_diameter + self.cap_add_d) / 2 - 1 * MM,
                         3,
                         start_angle=30,
                         angular_range=180,
@@ -368,7 +368,7 @@ class BuntingPoles(Model):
                 ):
                     Cylinder(
                         (1 / 4 * IN + fit) / 2,
-                        out_d * 4,
+                        self.outer_diameter * 4,
                         rotation=(0, 270, 0),
                         align=(
                             Align.CENTER,
@@ -383,9 +383,6 @@ class BuntingPoles(Model):
         return p.part
 
     def coupling_jig(self) -> Part:
-        end_thick = self.end_thick_in * IN
-        out_d = self.outer_diameter_in * IN
-        coupling_out_d = self.coupling_outer_diameter_in * IN
         coupling_overlap_length = COUPLING_OVERLAP_LENGTH
         edge_len = EDGE_LEN
 
@@ -393,25 +390,27 @@ class BuntingPoles(Model):
             extra = (0.1 * IN) + ((1 / 16 + 1 / 8) * IN)
             with BuildSketch() as sk:
                 RectangleRounded(
-                    coupling_out_d + extra,
-                    coupling_out_d + extra,
-                    coupling_out_d / 8,
+                    self.coupling_outer_diameter + extra,
+                    self.coupling_outer_diameter + extra,
+                    self.coupling_outer_diameter / 8,
                 )
-            extrude(sk.sketch, coupling_overlap_length + end_thick)
+            extrude(sk.sketch, coupling_overlap_length + self.end_thick)
             with BuildPart(mode=Mode.SUBTRACT):
-                with BuildSketch(Plane.XY.offset(end_thick)) as sk:
+                with BuildSketch(Plane.XY.offset(self.end_thick)) as sk:
                     fit = 0.5 * MM
                     RectangleRounded(
-                        (coupling_out_d + fit),
-                        (coupling_out_d + fit),
-                        coupling_out_d / 3,
+                        (self.coupling_outer_diameter + fit),
+                        (self.coupling_outer_diameter + fit),
+                        self.coupling_outer_diameter / 3,
                     )
                     if self.jig_interior:
-                        Circle((out_d - fit) / 2, mode=Mode.SUBTRACT)
+                        Circle(
+                            (self.outer_diameter - fit) / 2, mode=Mode.SUBTRACT
+                        )
                 extrude(sk.sketch, coupling_overlap_length)
                 with BuildSketch() as sk:
-                    Circle((out_d - fit) * self.jig_fit)
-                extrude(sk.sketch, coupling_overlap_length + end_thick)
+                    Circle((self.outer_diameter - fit) * self.jig_fit)
+                extrude(sk.sketch, coupling_overlap_length + self.end_thick)
             if self.jig_interior:
                 edges = first_and_last(p.edges().group_by(Axis.Z))
             else:
@@ -423,11 +422,11 @@ class BuntingPoles(Model):
             ]
             with (
                 BuildPart(faces, mode=Mode.SUBTRACT),  # ty: ignore[invalid-argument-type]
-                Locations((0, end_thick / 2, 0)),
+                Locations((0, self.end_thick / 2, 0)),
             ):
                 Cylinder(
                     (1 / 4 * IN) / 2,
-                    coupling_out_d * 2,
+                    self.coupling_outer_diameter * 2,
                     rotation=(0, 0, 0),
                     align=(Align.CENTER, Align.CENTER, Align.MIN),
                 )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from bdbox import Model
+from bdbox import Inches, Model
 from build123d import (
     IN,
     MM,
@@ -22,11 +22,11 @@ from build123d import (
 
 
 class ShelfFoot(Model):
-    diameter: float = (3 / 4) * IN
-    length: float = 4 * IN
-    thickness: float = (1 / 2) * IN
-    screw_size: float = (3 / 16) * IN
-    slop: float = (1 / 32) * IN
+    diameter: float = Inches(3 / 4)
+    length: float = Inches(4)
+    thickness: float = Inches(1 / 2)
+    screw_size: float = Inches(3 / 16)
+    slop: float = Inches(1 / 32)
 
     def build(self) -> Model.Geometry:
         width = self.diameter + self.screw_size * 6
@@ -73,9 +73,9 @@ class ShelfFoot(Model):
 
 
 class PictureFrame(Model):
-    length: float = 11 * IN
-    width: float = 8.5 / 2 * IN
-    frame_thick: float = 1 / 4 * IN
+    length: float = Inches(11)
+    width: float = Inches(8.5 / 2)
+    frame_thick: float = Inches(1 / 4)
     thickness: float = 5 * MM
 
     def build(self) -> Model.Geometry:

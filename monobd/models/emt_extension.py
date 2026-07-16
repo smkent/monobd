@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from bdbox import Model
+from bdbox import Inches, Model
 from build123d import (
     IN,
     Align,
@@ -18,11 +18,11 @@ from build123d import (
 
 
 class EMTExtension(Model):
-    diameter: float = (1 + 0 / 4) * IN
-    thickness: float = (1 + 1 / 8) * IN
-    screw_size: float = (1 / 4) * IN
-    chamfer: float = (1 / 8) * IN
-    slop: float = (1 / 32) * IN
+    diameter: float = Inches(1)
+    thickness: float = Inches(1 + 1 / 8)
+    screw_size: float = Inches(1 / 4)
+    chamfer: float = Inches(1 / 8)
+    slop: float = Inches(1 / 32)
 
     def build(self) -> Model.Geometry:
         with BuildPart() as p:
