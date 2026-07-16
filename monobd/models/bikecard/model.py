@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from enum import Enum, auto
 
-from bdbox import Model, Preset
+from bdbox import Inches, Model, Preset
 from build123d import (
     IN,
     MM,
@@ -41,8 +41,8 @@ CUTOUT_INSET = 9 * MM
 class BackCutoutShape(BaseSketchObject):
     def __init__(
         self,
-        width: float = CARD_WIDTH * IN,
-        height: float = CARD_HEIGHT * IN,
+        width: float,
+        height: float,
         svg: str | None = None,
         rotation: float = 0,
         align: tuple[Align, Align] = (Align.CENTER, Align.CENTER),
@@ -88,8 +88,8 @@ class BackCutoutShape(BaseSketchObject):
 class FrontCutoutShape(BaseSketchObject):
     def __init__(
         self,
-        width: float = CARD_WIDTH * IN,
-        height: float = CARD_HEIGHT * IN,
+        width: float,
+        height: float,
         fit: float = CARD_FIT,
         rotation: float = 0,
         align: tuple[Align, Align] = (Align.CENTER, Align.CENTER),
@@ -122,43 +122,41 @@ class Style(Enum):
 
 class BikeCardModel(Model):
     style: Style = Style.CARD
-    width: float = CARD_WIDTH
-    height: float = CARD_HEIGHT
+    width: float = Inches(CARD_WIDTH)
+    height: float = Inches(CARD_HEIGHT)
     svg: str = "immortan-joe.svg"
     presets = (Preset("bagtag", width=3.75, height=1.55, style=Style.BAGTAG),)
 
     def build(self) -> Model.Geometry:
-        width_in = self.width * IN
-        height_in = self.height * IN
         with BuildPart() as p:
             with BuildSketch():
                 RectangleRounded(
-                    width_in + FRAME_THICK * 2 + CARD_FIT,
-                    height_in + FRAME_THICK * 2 + CARD_FIT,
+                    self.width + FRAME_THICK * 2 + CARD_FIT,
+                    self.height + FRAME_THICK * 2 + CARD_FIT,
                     FRAME_THICK * 2.5,
                 )
             extrude(amount=FRAME_HEIGHT * 2 + CARD_THICK)
             chamfer(list(p.edges().group_by(Axis.Z)), 1.0 * MM)
             with BuildSketch():
-                width = width_in
+                width = self.width
                 if self.style == Style.BAGTAG:
                     width -= FRAME_THICK * 2
                 BackCutoutShape(
                     width,
-                    height_in,
+                    self.height,
                     svg=self.svg,
                     corner_holes=(self.style == Style.CARD),
                 )
             extrude(amount=FRAME_HEIGHT + CARD_THICK, mode=Mode.SUBTRACT)
             with BuildSketch(Plane.XY.offset(FRAME_HEIGHT)):
                 RectangleRounded(
-                    width_in + CARD_FIT,
-                    height_in + CARD_FIT,
+                    self.width + CARD_FIT,
+                    self.height + CARD_FIT,
                     CARD_FIT / 2,
                 )
             extrude(amount=CARD_THICK, mode=Mode.SUBTRACT)
             with BuildSketch(Plane.XY.offset(FRAME_HEIGHT + CARD_THICK)):
-                FrontCutoutShape(width_in, height_in, CARD_FIT)
+                FrontCutoutShape(self.width, self.height, CARD_FIT)
             extrude(amount=FRAME_HEIGHT, mode=Mode.SUBTRACT)
         if not p.part:
             raise RuntimeError("Empty part")

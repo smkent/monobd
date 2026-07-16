@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from operator import itemgetter
 
-from bdbox import Model
+from bdbox import Inches, Model
 from build123d import (
     IN,
     MM,
@@ -178,11 +178,11 @@ class DispenserBody(BasePartObject):
 
 
 class PoopBagDispenserWallMount(Model):
-    diameter = 1.6 * IN
-    length: float = 4 * IN
-    width: float = (2 + 3 / 4) * IN
-    thickness: float = (1 / 8 + 1 / 32) * IN
-    screw_size: float = (3 / 16) * IN
+    diameter = Inches(1.6)
+    length: float = Inches(4)
+    width: float = Inches(2 + 3 / 4)
+    thickness: float = Inches(1 / 8 + 1 / 32)
+    screw_size: float = Inches(3 / 16)
 
     def build(self) -> Model.Geometry:
         with BuildPart() as p:

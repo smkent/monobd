@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 
-from bdbox import Choice, Int, Model, Preset
+from bdbox import Choice, Inches, Int, Model, Preset
 from build123d import (
     IN,
     MM,
@@ -71,7 +71,7 @@ class HandleBody(BasePartObject):
         length: float,
         height: float,
         angle: float,
-        thickness: float = 1 / 2 * IN,
+        thickness: float,
         grip_thickness: float = 1 / 2 * IN,
         rotation: RotationLike = (90, 0, 0),
         align: tuple[Align, Align, Align] = (
@@ -112,15 +112,15 @@ class HandleBody(BasePartObject):
 
 
 class ScrewHandle(Model):
-    length: float = 6
-    height: float = 1 + 1 / 4
-    thickness: float = 1 / 2
+    length: float = Inches(6)
+    height: float = Inches(1 + 1 / 4)
+    thickness: float = Inches(1 / 2)
     angle: float = 20
-    screw_size: float = 3 / 16
+    screw_size: float = Inches(3 / 16)
     screw_style: str = Choice(
         "counter_sink", choices=("counter_sink", "counter_bore")
     )
-    screw_hole_depth: float = 0
+    screw_hole_depth: float = Inches(0)
     screw_hole_countersink_angle: float = 60
     alpha: int = Int(0xCC, min=0x88, max=0xFF, step=1)
     presets = (
@@ -136,18 +136,18 @@ class ScrewHandle(Model):
     def build(self) -> Model.Geometry:
         with BuildPart() as p:
             HandleBody(
-                length=self.length * IN,
-                height=self.height * IN,
+                length=self.length,
+                height=self.height,
                 angle=self.angle,
-                thickness=self.thickness * IN,
+                thickness=self.thickness,
             )
             with (
-                GridLocations(self.length * IN, 0, 2, 1),
+                GridLocations(self.length, 0, 2, 1),
                 Locations(
                     (
                         0,
                         0,
-                        (self.screw_hole_depth * IN) or (self.height * IN) / 2,
+                        self.screw_hole_depth or self.height / 2,
                     )
                 ),
             ):
@@ -158,15 +158,15 @@ class ScrewHandle(Model):
                             self.screw_hole_countersink_angle
                         )
                     CounterSinkHole(
-                        radius=(self.screw_size * IN) / 2,
-                        counter_sink_radius=(self.screw_size * IN),
+                        radius=self.screw_size / 2,
+                        counter_sink_radius=self.screw_size,
                         mode=Mode.SUBTRACT,
                         **kwargs,
                     )
                 elif self.screw_style == "counter_bore":
                     CounterBoreHole(
-                        radius=(self.screw_size * IN) / 2,
-                        counter_bore_radius=(self.screw_size * IN),
+                        radius=self.screw_size / 2,
+                        counter_bore_radius=self.screw_size,
                         counter_bore_depth=0,
                         mode=Mode.SUBTRACT,
                     )
