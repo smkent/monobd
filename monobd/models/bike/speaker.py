@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
 from functools import cached_property
 from operator import itemgetter
 
@@ -45,11 +44,6 @@ from build123d import (
 from monobd.objects import HexagonPattern
 
 first_and_last = itemgetter(0, -1)
-
-
-@dataclass
-class Show(Exception):  # noqa: N818
-    geometry: Model.Geometry | None
 
 
 class StemProfile(BaseSketchObject):
@@ -503,33 +497,30 @@ class BikeSpeakerMount(Model):
         return part
 
     def build(self) -> Model.Geometry | None:
-        try:
-            with BuildPart() as tube, Locations((0, 0, -self.split_offset)):
-                Cylinder(
-                    radius=self.stem_diameter / 2,
-                    height=self.stem_diameter * 2,
-                    rotation=(90, 0, 0),
-                    align=(Align.CENTER, Align.CENTER, Align.CENTER),
-                )
-            if not tube.part:
-                raise RuntimeError("Empty part")
-            tube.part.label = "stem"
-            tube.part.color = Color(0x333333, alpha=0xCC)
-            stem_mount_top = self.stem_mount_top
-            parts = [
-                self.stem_mount_top,
-                self.stem_mount_bottom,
-                self.mount.move(
-                    Location((0, 0, stem_mount_top.bounding_box().max.Z))
-                ),
-            ]
-            if self.print_orientation:
-                if len(parts) > 1:
-                    parts = pack(parts, padding=5 * MM)
-                    for part in parts:
-                        part.move(Location((0, 0, -part.bounding_box().min.Z)))
-            else:
-                parts.append(tube.part)
-            return Compound(children=list(parts))
-        except Show as e:
-            return e.geometry
+        with BuildPart() as tube, Locations((0, 0, -self.split_offset)):
+            Cylinder(
+                radius=self.stem_diameter / 2,
+                height=self.stem_diameter * 2,
+                rotation=(90, 0, 0),
+                align=(Align.CENTER, Align.CENTER, Align.CENTER),
+            )
+        if not tube.part:
+            raise RuntimeError("Empty part")
+        tube.part.label = "stem"
+        tube.part.color = Color(0x333333, alpha=0xCC)
+        stem_mount_top = self.stem_mount_top
+        parts = [
+            self.stem_mount_top,
+            self.stem_mount_bottom,
+            self.mount.move(
+                Location((0, 0, stem_mount_top.bounding_box().max.Z))
+            ),
+        ]
+        if self.print_orientation:
+            if len(parts) > 1:
+                parts = pack(parts, padding=5 * MM)
+                for part in parts:
+                    part.move(Location((0, 0, -part.bounding_box().min.Z)))
+        else:
+            parts.append(tube.part)
+        return Compound(children=list(parts))
