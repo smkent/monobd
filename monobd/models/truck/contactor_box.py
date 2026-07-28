@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from bdbox import Model
 from build123d import (
+    IN,
     MM,
     Align,
     Axis,
@@ -50,8 +51,9 @@ class Box:
     mount_hole_radius = 2 * MM
     mount_hole_position = Vector(238 * MM, 74 * MM)
 
-    class Connectors:
-        radius = (35 * MM) / 2
+    class Wire:
+        large_wire_radius = (17 * MM) / 2
+        connector_radius = (35 * MM) / 2
 
     @classmethod
     @contextmanager
@@ -186,7 +188,7 @@ class ContactorBoxMount(Model):
                 GridLocations(Box.size.X, Box.size.Y / 2, 2, 2),
             ):
                 Cylinder(
-                    Box.Connectors.radius,
+                    Box.Wire.connector_radius,
                     height=Box.wall_thickness * 2,
                     rotation=(0, 90, 0),
                     mode=Mode.SUBTRACT,
@@ -195,16 +197,47 @@ class ContactorBoxMount(Model):
             raise RuntimeError("Empty part")
         p.part.label = "Box outline"
         p.part.color = Color(0xCCCCCC, 0xCC)
-        return p.part.move(Location((0, 0, -Box.wall_thickness * 2)))
+        return p.part
+
+    @cached_property
+    def large_wires(self) -> Part:
+        with (
+            BuildPart() as p,
+            Locations((0, 0, Box.size.Z / 2)),
+            GridLocations(0, Box.size.Y / 2, 1, 2),
+        ):
+            Cylinder(
+                Box.Wire.large_wire_radius,
+                height=Box.size.X * 1.5,
+                rotation=(0, 90, 0),
+            )
+        if not p.part:
+            raise RuntimeError("Empty part")
+        p.part.label = "Large wires"
+        p.part.color = Color(0xFF5511, 0xAA)
+        return p.part
 
     @cached_property
     def plate(self) -> Part:
         with BuildPart() as p:
             Base(thickness=self.thickness, edge_fit=self.edge_fit)
+            # Shunt mount
+            with (
+                BuildSketch(),
+                Locations((-Box.size.X / 4, -Box.size.Y / 4, 0)),
+                GridLocations(0, (1.25 * IN), 1, 2),
+            ):
+                Circle(radius=(6 * MM) / 2)
+            extrude(amount=self.thickness, mode=Mode.SUBTRACT)
         if not p.part:
             raise RuntimeError("Empty part")
         p.part.label = "Box plate"
-        return p.part
+        return p.part.move(Location((0, 0, Box.wall_thickness * 2)))
 
     def build(self) -> Model.Geometry:
-        return arrange(self.box, self.plate, pack_parts=self.print_orientation)
+        return arrange(
+            self.large_wires,
+            self.plate,
+            self.box,
+            pack_parts=self.print_orientation,
+        )
