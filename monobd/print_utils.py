@@ -1,6 +1,39 @@
 from __future__ import annotations
 
-from build123d import MM, Compound, Location, Shape, pack
+from dataclasses import dataclass
+from functools import partial, update_wrapper
+from typing import TYPE_CHECKING, ParamSpec, TypeVar
+
+from build123d import MM, Compound, Location, Rotation, Shape, pack
+
+P = ParamSpec("P")
+R = TypeVar("R")
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any, Concatenate
+
+    F = Callable[Concatenate[Any, P], R]
+
+
+@dataclass
+class PrintRotation:
+    x: float = 0
+    y: float = 0
+    z: float = 0
+    param: str = "print_orientation"
+
+    def __call__(self, func: F) -> F:
+        update_wrapper(self, func)
+        return partial(self.wrapper, func)
+
+    def wrapper(
+        self, func: F, inst: Any, *args: P.args, **kwargs: P.kwargs
+    ) -> R:
+        result = func(inst, *args, **kwargs)
+        if getattr(inst, self.param, False):
+            return result.move(Rotation(self.x, self.y, self.z))
+        return result
 
 
 def arrange(
