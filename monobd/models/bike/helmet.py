@@ -281,6 +281,31 @@ class RiserProfile(BaseSketchObject):
         )
 
 
+class Riser(BasePartObject):
+    def __init__(
+        self,
+        width: float,
+        thickness: float,
+        base_thickness: float,
+        rotation: RotationLike = (0, 0, 0),
+        align: tuple[Align, Align, Align] = (
+            Align.CENTER,
+            Align.CENTER,
+            Align.MIN,
+        ),
+        mode: Mode = Mode.ADD,
+    ) -> None:
+        with BuildPart() as p:
+            with BuildSketch(Plane.XZ.offset(-width / 2)):
+                RiserProfile(width, thickness, base_thickness)
+            extrude(amount=width)
+        if not p.part:
+            raise RuntimeError("Empty part")
+        super().__init__(
+            part=p.part, rotation=rotation, align=align, mode=mode
+        )
+
+
 class MountTop(BasePartObject):
     def __init__(
         self,
@@ -381,7 +406,7 @@ class SliderBottomProfile(BaseSketchObject):
                     w = screw_chamfer * (
                         1.001 + min(0.5, tilt_adjustment / 10)
                     )
-                    w_small = max(w / 10, 0.4 * MM)
+                    w_small = max(w / 10, 0.6 * MM)
                     h = mid_thickness
                     with Locations((0, w)):
                         Rectangle(
@@ -602,9 +627,7 @@ class SliderTop(BasePartObject):
                 )
             extrude(amount=base_size / 2, both=True)
 
-            with BuildSketch(Plane.XZ.offset(-base_size / 2)):
-                RiserProfile(base_size, riser_thickness, base_thickness)
-            extrude(amount=base_size)
+            Riser(base_size, riser_thickness, base_thickness)
             fillet(
                 p.edges(Select.LAST).filter_by(Axis.Y).group_by(Axis.Z)[0],
                 min(riser_thickness + base_thickness, grip_thickness),
@@ -790,16 +813,14 @@ class SliderBase(BasePartObject):
         )
 
 
-class MountBottom(BasePartObject):
+class MountBottomBody(BasePartObject):
     def __init__(
         self,
         base_size: float,
-        base_thickness: float,
         bottom_thickness: float,
         bottom_extension: float = 0,
         helmet_curve_radius: float = 10 * IN,
         edge_chamfer: float = 0.4 * MM,
-        strap_radius: float = 8 * MM,
         tilt_angle: float = 0,
         rotation: RotationLike = (0, 0, 0),
         align: tuple[Align, Align, Align] = (
@@ -809,7 +830,7 @@ class MountBottom(BasePartObject):
         ),
         mode: Mode = Mode.ADD,
         *,
-        fancy: bool = True,
+        rail_top: bool = False,
     ) -> None:
         bottom_thickness -= (
             math.tan(math.radians(tilt_angle / 2)) * StrapGripSize.width
@@ -837,20 +858,77 @@ class MountBottom(BasePartObject):
             bottom_face = Face.make_surface(ln.edges()).move(
                 Location((0, 0, tilt / 2 - bottom_thickness))
             )
-            with BuildSketch(Plane.XY.offset(-bottom_thickness / 2)) as sk2:
-                Rectangle(base_size, base_size)
-            loft((bottom_face, sk2.sketch))
-            extrude(sk2.sketch, bottom_thickness / 2)
-            if ww > base_size:
+            if rail_top:
+                with BuildSketch(Plane.XY) as sk_top:
+                    Rectangle(base_size / 2, base_size)
+                loft((bottom_face, sk_top.sketch))
+
                 fillet(
                     p.edges(Select.LAST)
                     .filter_by(Plane.YZ)
-                    .group_by(Axis.Z)[0],
-                    bottom_thickness / 2,
+                    .group_by(Axis.Z)[-1],
+                    bottom_thickness,
                 )
+            else:
+                with BuildSketch(
+                    Plane.XY.offset(-bottom_thickness / 2)
+                ) as sk2:
+                    Rectangle(base_size, base_size)
+                loft((bottom_face, sk2.sketch))
+                extrude(sk2.sketch, bottom_thickness / 2)
+
+                if ww > base_size:
+                    fillet(
+                        p.edges(Select.LAST)
+                        .filter_by(Plane.YZ)
+                        .group_by(Axis.Z)[0],
+                        bottom_thickness / 8,
+                    )
             # Outer corner fillet
             edges = p.edges().filter_by(Plane.YZ).group_by(Axis.Z)[0]
-            fillet(edges, min(base_thickness * 0.9, edge_chamfer * 2))
+            fillet(edges, edge_chamfer * 1.5)
+
+        if not p.part:
+            raise RuntimeError("Empty part")
+        super().__init__(
+            part=p.part, rotation=rotation, align=align, mode=mode
+        )
+
+
+class MountBottom(BasePartObject):
+    def __init__(
+        self,
+        base_size: float,
+        bottom_thickness: float,
+        bottom_extension: float = 0,
+        helmet_curve_radius: float = 10 * IN,
+        edge_chamfer: float = 0.4 * MM,
+        strap_radius: float = 8 * MM,
+        tilt_angle: float = 0,
+        rotation: RotationLike = (0, 0, 0),
+        align: tuple[Align, Align, Align] = (
+            Align.CENTER,
+            Align.CENTER,
+            Align.MAX,
+        ),
+        mode: Mode = Mode.ADD,
+        *,
+        fancy: bool = True,
+        rail_top: bool = False,
+    ) -> None:
+        with BuildPart() as p:
+            MountBottomBody(
+                base_size,
+                bottom_thickness,
+                bottom_extension,
+                helmet_curve_radius=helmet_curve_radius,
+                edge_chamfer=edge_chamfer,
+                tilt_angle=tilt_angle,
+                rail_top=rail_top,
+            )
+            bottom_thickness -= (
+                math.tan(math.radians(tilt_angle / 2)) * StrapGripSize.width
+            )
 
             # Strap cutouts
             strap_z = -(bottom_thickness - strap_radius + edge_chamfer * 1.5)
@@ -860,7 +938,7 @@ class MountBottom(BasePartObject):
             ):
                 SliderStrapGrips(
                     base_size,
-                    height=StrapGripSize.width * 3.25 - edge_chamfer / 2,
+                    height=StrapGripSize.width * 3.10 - edge_chamfer / 2,
                     mode=Mode.SUBTRACT,
                 )
             if fancy:
@@ -948,7 +1026,6 @@ class MountBase(BasePartObject):
             )
             MountBottom(
                 base_size,
-                base_thickness,
                 bottom_thickness,
                 bottom_extension,
                 edge_chamfer=edge_chamfer,
@@ -1001,12 +1078,43 @@ class BikeHelmetCameraMount(Model):
     slider_grip_thickness: float = 8
     slider_fit: float = 0.2
     base_tilt_angle: float = 15
-    edge_chamfer: float = 0.4
+    edge_chamfer: float = 0.6
     fancy: bool = True
 
     @cached_property
     def mid_size(self) -> float:
         return self.base_size - self.slider_grip_thickness * 2
+
+    @cached_property
+    @PrintRotation(x=90)
+    def single_piece_mount(self) -> Part:
+        with BuildPart() as p:
+            MountBottom(
+                self.base_size,
+                self.bottom_thickness,
+                self.bottom_extension,
+                edge_chamfer=self.edge_chamfer,
+                tilt_angle=self.base_tilt_angle,
+                fancy=self.fancy,
+                rail_top=True,
+            )
+            Rails(
+                length=self.rail_size,
+                align=(Align.CENTER, Align.CENTER, Align.MIN),
+            )
+            if self.fancy:
+                chamfer(
+                    first_and_last(
+                        p.edges().filter_by(Plane.XZ).group_by(Axis.Y)
+                    ),
+                    self.edge_chamfer,
+                )
+
+        if not p.part:
+            raise RuntimeError("Empty part")
+        p.part.label = "Single Piece Mount"
+        p.part.color = Color(0xBB99FF, 0xFF)
+        return p.part
 
     @cached_property
     @PrintRotation(x=90)
@@ -1084,6 +1192,7 @@ class BikeHelmetCameraMount(Model):
 
     def build(self) -> Model.Geometry | None:
         return arrange(
+            self.single_piece_mount,
             self.rail_test_part,
             self.mount,
             self.base,
