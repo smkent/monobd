@@ -42,9 +42,10 @@ class PrintRotation:
 
 
 def arrange(
-    *parts: Shape, padding: float = 5 * MM, pack_parts: bool = True
+    *parts: Shape | None, padding: float = 5 * MM, pack_parts: bool = True
 ) -> Compound:
-    pp = pack(parts, padding=padding, align_z=True) if pack_parts else parts
+    shapes = [p for p in parts if p is not None]
+    pp = pack(shapes, padding=padding, align_z=True) if pack_parts else shapes
     model = Compound(children=list(pp))
     if pack_parts:
         bbox = model.bounding_box()
