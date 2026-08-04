@@ -382,13 +382,13 @@ class MountClamp(BasePartObject):
 
 
 class BikeHornMount(Model):
-    clamp_thickness: float = 2.0
+    clamp_thickness: float = 3.0
     clamp_rotation: float = 20
     zip_tie_depth: float = 1
     screw_size: float = 3
     screw_fit: float = 0.4
     cutout_angle: float = Float(
-        60, min=0, max=180, step=1, description="Handlebar clamp arc angle"
+        75, min=0, max=180, step=1, description="Handlebar clamp arc angle"
     )
     fancy: bool = True
 
