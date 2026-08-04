@@ -2,17 +2,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial, update_wrapper
-from typing import TYPE_CHECKING, ParamSpec, TypeVar
+from typing import TYPE_CHECKING
 
-from build123d import MM, Compound, Location, Rotation, Shape, pack
-
-P = ParamSpec("P")
-R = TypeVar("R")
+from build123d import MM, Compound, Location, Rotation, pack
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from typing import Any, Concatenate
+    from typing import Any, Concatenate, ParamSpec, TypeVar
 
+    from build123d import Shape
+
+    P = ParamSpec("P")
+    R = TypeVar("R", bound=Shape)
     F = Callable[Concatenate[Any, P], R]
 
 
@@ -28,7 +29,11 @@ class PrintRotation:
         return partial(self.wrapper, func)
 
     def wrapper(
-        self, func: F, inst: Any, *args: P.args, **kwargs: P.kwargs
+        self,
+        func: Callable[Concatenate[Any, P], R],
+        inst: Any,
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> R:
         result = func(inst, *args, **kwargs)
         if getattr(inst, self.param, False):
