@@ -28,11 +28,15 @@ from build123d import (
     Part,
     Plane,
     Polyline,
+    Pos,
     RadiusArc,
     Rectangle,
     RegularPolygon,
+    Rot,
     Rotation,
     RotationLike,
+    Text,
+    TextAlign,
     Vector,
     add,
     extrude,
@@ -46,18 +50,11 @@ from build123d import (
 from monobd.objects.hole import PrintableCounterBoreHole
 
 
-class Constants:
-    handlebar_round = 15
-    handlebar_radius = 1 / 2 * IN + 0.2 * MM
-    handlebar_fit = handlebar_round - handlebar_radius
-
-    barrel_handlebar_offset = 0
-
-    barrel_size = Vector(17.5, 17.5, handlebar_round * 2)
-    barrel_radius = 6.5
-
-    barrel_grip_shorten = 4
-    barrel_grip_length = barrel_size.Z / 2 - barrel_grip_shorten
+class HornMeasurements:
+    barrel_size = Vector(17.5, 17.5, 31)
+    barrel_corner_radius = 6.5
+    barrel_grip_space = barrel_size.Z / 2 - 4
+    handlebar_round = barrel_size.Z / 2
 
 
 class NutCutout(BasePartObject):
@@ -95,7 +92,7 @@ class ClampBaseProfile(BaseSketchObject):
     def __init__(
         self,
         length: float,
-        width: float = Constants.barrel_grip_length,
+        width: float = HornMeasurements.barrel_grip_space,
         rotation: float = 0,
         align: tuple[Align, Align] = (Align.MIN, Align.MIN),
         mode: Mode = Mode.ADD,
@@ -112,17 +109,17 @@ class ClampBaseProfile(BaseSketchObject):
             make_face()
             with Locations(Rotation(0, 0, 270)):
                 Circle(
-                    radius=Constants.handlebar_round,
+                    radius=HornMeasurements.handlebar_round,
                     arc_size=180,
                     align=(Align.MAX, Align.MIN),
                 )
             fillet(
                 sk.vertices().filter_by_position(
                     Axis.X,
-                    Constants.handlebar_round / 2,
-                    Constants.handlebar_round,
+                    HornMeasurements.handlebar_round / 2,
+                    HornMeasurements.handlebar_round,
                 ),
-                Constants.handlebar_round,
+                HornMeasurements.handlebar_round,
             )
         super().__init__(
             obj=sk.sketch, rotation=rotation, align=align, mode=mode
@@ -132,9 +129,10 @@ class ClampBaseProfile(BaseSketchObject):
 class ClampBase(BasePartObject):
     def __init__(
         self,
-        clamp_thickness: float,
+        horn_clamp_thickness: float,
+        clamp_separation: float,
         screw_size: float,
-        width: float = Constants.barrel_grip_length,
+        width: float = HornMeasurements.barrel_grip_space,
         rotation: RotationLike = (0, 0, 0),
         align: tuple[Align, Align, Align] = (
             Align.CENTER,
@@ -145,22 +143,25 @@ class ClampBase(BasePartObject):
         *,
         fancy: bool = True,
     ) -> None:
-        height = Constants.barrel_size.Y + clamp_thickness * 2
-        clamp_separation = Constants.barrel_size.Y - screw_size * 2
-        base_length = Constants.barrel_size.X + Constants.handlebar_round
-        length = base_length + clamp_thickness + screw_size * 2
+        height = HornMeasurements.barrel_size.Y + horn_clamp_thickness * 2
+        base_length = (
+            HornMeasurements.barrel_size.X + HornMeasurements.handlebar_round
+        )
+        length = base_length + horn_clamp_thickness + screw_size * 2
         with BuildPart() as p:
             with BuildSketch(Plane.XY) as sk:
                 ClampBaseProfile(length, width)
             extrude(sk.sketch, amount=height / 2, both=True)
             with BuildSketch(-Plane.XZ) as sk:
                 Rectangle(
-                    Constants.barrel_size.X + Constants.handlebar_round,
-                    Constants.barrel_size.Y,
+                    HornMeasurements.barrel_size.X
+                    + HornMeasurements.handlebar_round,
+                    HornMeasurements.barrel_size.Y,
                     align=(Align.MIN, Align.CENTER),
                 )
                 fillet(
-                    sk.vertices().group_by(Axis.X)[-1], Constants.barrel_radius
+                    sk.vertices().group_by(Axis.X)[-1],
+                    HornMeasurements.barrel_corner_radius,
                 )
                 Rectangle(
                     length, clamp_separation, align=(Align.MIN, Align.CENTER)
@@ -169,19 +170,20 @@ class ClampBase(BasePartObject):
                     sk.vertices()
                     .filter_by_position(
                         Axis.X,
-                        Constants.handlebar_round,
-                        Constants.handlebar_round + Constants.barrel_size.Y,
+                        HornMeasurements.handlebar_round,
+                        HornMeasurements.handlebar_round
+                        + HornMeasurements.barrel_size.Y,
                     )
                     .filter_by_position(
                         Axis.Y,
                         -clamp_separation / 2 - 0.1,
                         clamp_separation / 2 + 0.1,
                     ),
-                    Constants.barrel_radius / 4,
+                    HornMeasurements.barrel_corner_radius / 4,
                 )
             extrude(
                 sk.sketch,
-                amount=Constants.handlebar_round * 2,
+                amount=HornMeasurements.handlebar_round * 2,
                 mode=Mode.SUBTRACT,
             )
             if fancy:
@@ -202,7 +204,9 @@ class ClampBase(BasePartObject):
 class MountBody(BasePartObject):
     def __init__(
         self,
-        clamp_thickness: float,
+        handlebar_radius: float,
+        horn_clamp_thickness: float,
+        clamp_separation: float,
         screw_size: float,
         rotation: RotationLike = (0, 0, 0),
         align: tuple[Align, Align, Align] | None = None,
@@ -210,42 +214,45 @@ class MountBody(BasePartObject):
         *,
         fancy: bool = True,
     ) -> None:
-        sm_width = Constants.barrel_size.Z / 2 - Constants.barrel_grip_shorten
         with BuildPart() as p:
             ClampBase(
-                clamp_thickness,
+                horn_clamp_thickness,
+                clamp_separation,
                 screw_size,
-                width=sm_width,
+                width=HornMeasurements.barrel_grip_space,
                 fancy=fancy,
                 rotation=(0, 0, 270),
                 align=(Align.MIN, Align.CENTER, Align.CENTER),
             )
             with BuildSketch(Plane.XZ) as sk:
                 Rectangle(
-                    Constants.handlebar_round,
-                    Constants.barrel_size.Y + clamp_thickness * 2,
+                    HornMeasurements.handlebar_round,
+                    HornMeasurements.barrel_size.Y + horn_clamp_thickness * 2,
                     align=(Align.MIN, Align.CENTER),
                 )
             revolve(sk.sketch, revolution_arc=-180)
             with BuildSketch() as sk:
                 base_length = (
-                    Constants.barrel_size.X + Constants.handlebar_round
+                    HornMeasurements.barrel_size.X
+                    + HornMeasurements.handlebar_round
                 )
-                length = base_length + clamp_thickness + screw_size * 2
+                length = base_length + horn_clamp_thickness + screw_size * 2
                 ClampBaseProfile(
                     length, align=(Align.MIN, Align.CENTER), rotation=270
                 )
             extrude(
                 sk.sketch,
-                amount=Constants.barrel_size.Y / 2 + clamp_thickness,
+                amount=HornMeasurements.barrel_size.Y / 2
+                + horn_clamp_thickness,
                 both=True,
                 mode=Mode.INTERSECT,
             )
             with BuildSketch() as sk:
-                Circle(radius=Constants.handlebar_radius)
+                Circle(radius=handlebar_radius)
             extrude(
                 sk.sketch,
-                amount=Constants.barrel_size.Y / 2 + clamp_thickness,
+                amount=HornMeasurements.barrel_size.Y / 2
+                + horn_clamp_thickness,
                 both=True,
                 mode=Mode.SUBTRACT,
             )
@@ -259,8 +266,9 @@ class MountBody(BasePartObject):
 class MountClampProfileMask(BasePartObject):
     def __init__(
         self,
-        clamp_thickness: float,
-        grip_size: float,
+        horn_clamp_thickness: float,
+        handlebar_grip_size: float,
+        handlebar_jaw_length: float,
         rotation: RotationLike = (0, 0, 0),
         align: tuple[Align, Align, Align] = (
             Align.CENTER,
@@ -269,27 +277,34 @@ class MountClampProfileMask(BasePartObject):
         ),
         mode: Mode = Mode.SUBTRACT,
     ) -> None:
-        height = Constants.barrel_size.Y + clamp_thickness * 2
+        height = HornMeasurements.barrel_size.Y + horn_clamp_thickness * 2
         with BuildPart() as p:
             with BuildSketch(Plane.YZ) as sk:
-                with Locations((-Constants.handlebar_round, 0)):
+                with Locations((-HornMeasurements.handlebar_round, 0)):
                     Rectangle(
-                        2 * Constants.handlebar_round + grip_size,
+                        HornMeasurements.handlebar_round * 2
+                        + handlebar_jaw_length,
                         height * 2,
                         align=(Align.MIN, Align.CENTER),
                     )
                 with BuildSketch(Plane.YZ, mode=Mode.SUBTRACT):
                     with BuildLine() as ln:
-                        min_x = -Constants.handlebar_round
-                        max_x = Constants.handlebar_round + grip_size
+                        min_x = -HornMeasurements.handlebar_round
+                        max_x = (
+                            HornMeasurements.handlebar_round
+                            + handlebar_jaw_length
+                        )
                         arc = CenterArc(
-                            (max_x - grip_size, 0),
-                            radius=grip_size,
+                            (max_x - handlebar_grip_size, 0),
+                            radius=handlebar_grip_size,
                             start_angle=270,
                             arc_size=180,
                         )
                         a0, a1 = arc @ 0, arc @ 1
-                        add_x = abs(min_x * 0.45)
+                        add_x = abs(
+                            min_x
+                            * min(0.65, 0.4 + 0.10 * horn_clamp_thickness)
+                        )
                         pts = [
                             arc @ 1,
                             (add_x, a1.Y),
@@ -303,12 +318,12 @@ class MountClampProfileMask(BasePartObject):
                         Polyline(pts)
                         fillet(
                             list(ln.vertices().group_by(Axis.X))[1:-1],
-                            grip_size * 2,
+                            handlebar_grip_size * 2,
                         )
                     make_face()
             extrude(
                 sk.sketch,
-                amount=Constants.handlebar_round * 2 * 2,
+                amount=HornMeasurements.handlebar_round * 2 * 2,
             )
         if not p.part:
             raise RuntimeError("Empty part")
@@ -320,10 +335,12 @@ class MountClampProfileMask(BasePartObject):
 class MountClamp(BasePartObject):
     def __init__(
         self,
-        clamp_thickness: float,
+        handlebar_radius: float,
+        horn_clamp_thickness: float,
         screw_size: float,
-        grip_size: float,
-        cutout_angle: float = 75,
+        handlebar_grip_size: float,
+        handlebar_jaw_length: float,
+        handlebar_clamp_opening_angle: float = 75,
         rotation: RotationLike = (0, 0, 0),
         align: tuple[Align, Align, Align] = (
             Align.CENTER,
@@ -332,46 +349,59 @@ class MountClamp(BasePartObject):
         ),
         mode: Mode = Mode.ADD,
     ) -> None:
-        height = Constants.barrel_size.Y + clamp_thickness * 2
+        height = HornMeasurements.barrel_size.Y + horn_clamp_thickness * 2
         with BuildPart() as p:
             with BuildSketch(Plane.XY.rotated((0, 0, 90))) as sk:
                 with BuildLine() as ln:
                     arc = CenterArc(
                         (0, 0),
-                        radius=Constants.handlebar_radius,
-                        start_angle=cutout_angle / 2,
-                        arc_size=(360 - cutout_angle),
+                        radius=handlebar_radius,
+                        start_angle=handlebar_clamp_opening_angle / 2,
+                        arc_size=(360 - handlebar_clamp_opening_angle),
                     )
                     out_r = min(
-                        ((arc @ 0).Y + clamp_thickness + screw_size),
-                        Constants.handlebar_round,
+                        (
+                            (arc @ 0).Y
+                            + min(horn_clamp_thickness, screw_size)
+                            + screw_size
+                        ),
+                        HornMeasurements.handlebar_round,
                     )
                     angle2 = math.degrees(
-                        2 * math.asin(out_r / Constants.handlebar_round)
+                        2 * math.asin(out_r / HornMeasurements.handlebar_round)
                     )
                     arc2 = CenterArc(
                         (0, 0),
-                        radius=Constants.handlebar_round,
+                        radius=HornMeasurements.handlebar_round,
                         start_angle=angle2 / 2,
                         arc_size=(360 - angle2),
                     )
                     pl = Polyline(
                         arc @ 0,
                         (
-                            Constants.handlebar_round + grip_size,
+                            (
+                                HornMeasurements.handlebar_round
+                                + handlebar_jaw_length
+                            ),
                             (arc @ 0).Y,
                         ),
                         (
-                            Constants.handlebar_round + grip_size,
-                            (arc2 @ 0).Y - grip_size / 2,
+                            (
+                                HornMeasurements.handlebar_round
+                                + handlebar_jaw_length
+                            ),
+                            (arc2 @ 0).Y - handlebar_grip_size / 2,
                         ),
                         arc2 @ 0,
                     )
                     mirror(pl, about=Plane.XZ)
                     verts = ln.vertices().group_by(Axis.X)
-                    if out_r < Constants.handlebar_round:
-                        fillet(verts[0], Constants.handlebar_round)
-                        fillet(verts[1], grip_size / 4)
+                    if out_r < HornMeasurements.handlebar_round:
+                        fillet(verts[1], handlebar_grip_size / 2)
+                        try:
+                            fillet(verts[0], HornMeasurements.handlebar_round)
+                        except ValueError:
+                            print("Handlebar clamp outer fillet failed")  # noqa: T201
                 make_face()
             extrude(sk.sketch, amount=height / 2, both=True)
         if not p.part:
@@ -382,22 +412,32 @@ class MountClamp(BasePartObject):
 
 
 class BikeHornMount(Model):
-    clamp_thickness: float = 3.0
-    clamp_rotation: float = 20
-    zip_tie_depth: float = 1
-    screw_size: float = 3
-    screw_fit: float = 0.4
-    cutout_angle: float = Float(
+    handlebar_fit_diameter: float = Float(
+        1 * IN + 2.0 * MM,
+        description="Handlebar clamp diameter (in mm), including fit",
+    )
+    horn_clamp_thickness: float = 4.0
+    handlebar_clamp_rotation: float = 10
+    handlebar_clamp_extra_length: float = 0
+    handlebar_clamp_opening_angle: float = Float(
         75, min=0, max=180, step=1, description="Handlebar clamp arc angle"
     )
+    screw_size: float = 3
+    screw_fit: float = 0.3
     fancy: bool = True
+
+    @cached_property
+    def handlebar_fit(self) -> float:
+        return (
+            HornMeasurements.handlebar_round - self.handlebar_fit_diameter / 2
+        )
 
     @cached_property
     def handlebar(self) -> Part:
         with BuildPart() as p:
             with BuildSketch():
-                Circle(radius=Constants.handlebar_radius)
-            extrude(amount=Constants.handlebar_radius * 5 / 2, both=True)
+                Circle(radius=self.handlebar_fit_diameter / 2)
+            extrude(amount=self.handlebar_fit_diameter * 1.5, both=True)
         if not p.part:
             raise RuntimeError("Empty part")
         p.part.label = "Handlebar"
@@ -410,14 +450,10 @@ class BikeHornMount(Model):
             plane = Plane.XY.moved(
                 Location(
                     (
-                        (
-                            Constants.handlebar_round
-                            + Constants.barrel_handlebar_offset
-                            + 8
-                        ),
+                        HornMeasurements.handlebar_round + 8,
                         -(
-                            Constants.handlebar_round
-                            + Constants.barrel_size.Y
+                            HornMeasurements.handlebar_round
+                            + HornMeasurements.barrel_size.Y
                             - 8
                         ),
                         0,
@@ -441,43 +477,44 @@ class BikeHornMount(Model):
                 Plane.YZ.shift_origin(
                     (
                         0,
-                        -Constants.handlebar_round,
+                        -HornMeasurements.handlebar_round,
                         0,
                     )
-                ).offset(
-                    -Constants.handlebar_round
-                    + Constants.barrel_handlebar_offset
-                )
+                ).offset(-HornMeasurements.handlebar_round)
             ) as sk:
                 Rectangle(
-                    Constants.barrel_size.X,
-                    Constants.barrel_size.Y,
+                    HornMeasurements.barrel_size.X,
+                    HornMeasurements.barrel_size.Y,
                     align=(Align.MAX, Align.CENTER),
                 )
-                fillet(sk.vertices(), Constants.barrel_radius)
-            extrude(sk.sketch, amount=Constants.barrel_size.Z)
+                fillet(sk.vertices(), HornMeasurements.barrel_corner_radius)
+            extrude(sk.sketch, amount=HornMeasurements.barrel_size.Z)
             with BuildSketch(
-                Plane.XY.shift_origin((0, -Constants.handlebar_round))
+                Plane.XY.shift_origin((0, -HornMeasurements.handlebar_round))
             ) as sk:
                 Rectangle(
-                    Constants.barrel_size.Z / 2,
-                    Constants.barrel_size.X / 2,
+                    HornMeasurements.barrel_size.Z / 2,
+                    HornMeasurements.barrel_size.X / 2,
                     align=(Align.MIN, Align.MAX),
                 )
-            extrude(sk.sketch, amount=Constants.barrel_size.Y / 2, both=True)
+            extrude(
+                sk.sketch, amount=HornMeasurements.barrel_size.Y / 2, both=True
+            )
             with BuildSketch(Plane.XY) as sk:
                 Rectangle(
+                    HornMeasurements.handlebar_round * 2,
                     (
-                        Constants.handlebar_round * 2
-                        + Constants.barrel_handlebar_offset
+                        HornMeasurements.handlebar_round
+                        + HornMeasurements.barrel_size.X / 2
                     ),
-                    Constants.handlebar_round + Constants.barrel_size.X / 2,
                     align=(Align.CENTER, Align.MAX),
                 )
-                Circle(radius=Constants.handlebar_round, mode=Mode.SUBTRACT)
+                Circle(
+                    radius=HornMeasurements.handlebar_round, mode=Mode.SUBTRACT
+                )
             for keep, height in zip(
                 (Keep.TOP, Keep.BOTTOM),
-                (8, Constants.barrel_size.Y),
+                (8, HornMeasurements.barrel_size.Y),
                 strict=True,
             ):
                 extrude(
@@ -493,27 +530,46 @@ class BikeHornMount(Model):
 
     @cached_property
     def mount_body(self) -> Part:
-        grip_size = self.screw_size * 1.75
+        handlebar_grip_size = self.screw_size * 2.0
+        handlebar_jaw_length = (
+            handlebar_grip_size
+            + self.screw_size
+            + self.handlebar_clamp_extra_length
+        )
+        horn_jaw_thickness = 2 * MM
+        clamp_separation = (
+            HornMeasurements.barrel_size.Y - 2 * horn_jaw_thickness
+        )
         with BuildPart() as p:
             horn_mount = MountBody(
-                self.clamp_thickness, self.screw_size, fancy=self.fancy
+                handlebar_radius=self.handlebar_fit_diameter / 2,
+                horn_clamp_thickness=self.horn_clamp_thickness,
+                clamp_separation=clamp_separation,
+                screw_size=self.screw_size,
+                fancy=self.fancy,
             )
             clamp_rotation_axis = Axis(
-                (0, 1 * Constants.handlebar_round, 0),
+                (0, 1 * HornMeasurements.handlebar_round, 0),
                 Axis.Z.direction,
             )
             clamp = MountClamp(
-                self.clamp_thickness,
+                handlebar_radius=self.handlebar_fit_diameter / 2,
+                horn_clamp_thickness=self.horn_clamp_thickness,
                 screw_size=self.screw_size,
-                grip_size=grip_size,
-                cutout_angle=self.cutout_angle,
+                handlebar_grip_size=handlebar_grip_size,
+                handlebar_jaw_length=handlebar_jaw_length,
+                handlebar_clamp_opening_angle=(
+                    self.handlebar_clamp_opening_angle
+                ),
                 mode=Mode.PRIVATE,
-            ).rotate(clamp_rotation_axis, -self.clamp_rotation)
+            ).rotate(clamp_rotation_axis, -self.handlebar_clamp_rotation)
             clamp_mask = MountClampProfileMask(
-                self.clamp_thickness, grip_size
-            ).rotate(clamp_rotation_axis, -self.clamp_rotation)
+                self.horn_clamp_thickness,
+                handlebar_grip_size,
+                handlebar_jaw_length,
+            ).rotate(clamp_rotation_axis, -self.handlebar_clamp_rotation)
 
-            with Locations((0, -Constants.handlebar_round, 0)):
+            with Locations((0, -HornMeasurements.handlebar_round, 0)):
                 add(clamp)
                 add(clamp_mask, mode=Mode.SUBTRACT)
 
@@ -521,12 +577,46 @@ class BikeHornMount(Model):
             clamp_face = p.faces().group_by(Axis.Y)[0].sort_by(Axis.Z)[-1]
             hb_screw_face, hb_nut_face = (
                 p.faces()
-                .filter_by(Plane.YZ.rotated((0, 0, -self.clamp_rotation)))
+                .filter_by(
+                    Plane.YZ.rotated((0, 0, -self.handlebar_clamp_rotation))
+                )
                 .sort_by_distance(
-                    (0, Constants.handlebar_round + grip_size, 0)
+                    (
+                        (
+                            (
+                                HornMeasurements.handlebar_round
+                                + handlebar_grip_size
+                            )
+                            * math.tan(
+                                math.radians(self.handlebar_clamp_rotation)
+                            )
+                        ),
+                        HornMeasurements.handlebar_round + handlebar_grip_size,
+                    )
                 )[:2]
-                .sort_by_distance((-grip_size, 0, 0))
+                .sort_by_distance((-handlebar_grip_size, 0, 0))
             )
+
+            # Handlebar fit diameter text
+            text_pos = Pos(
+                -(
+                    HornMeasurements.handlebar_round
+                    - HornMeasurements.barrel_grip_space / 2
+                ),
+                -HornMeasurements.handlebar_round,
+                -(
+                    HornMeasurements.barrel_size.Y / 2
+                    + self.horn_clamp_thickness
+                ),
+            ) * Rot(0, 0, 90)
+            with BuildSketch(-Plane(text_pos)) as sk:
+                Text(
+                    f"{round(self.handlebar_fit_diameter, 1)}",
+                    HornMeasurements.barrel_grip_space / 1.5,
+                    text_align=(TextAlign.LEFT, TextAlign.CENTER),
+                    align=(Align.MAX, Align.CENTER),
+                )
+            extrude(sk.sketch, amount=-0.4, mode=Mode.SUBTRACT)
 
             # Edge fillets
             if self.fancy:
@@ -543,29 +633,48 @@ class BikeHornMount(Model):
                     .group_by(Axis.Z)[-1]
                 )
                 outer_edge, *_, inner_edge = edge_set.group_by(Axis.Y)
-                fillet(inner_edge, Constants.handlebar_fit * 0.4)
-                fillet(outer_edge, Constants.handlebar_fit * 0.4)
+                try:
+                    fillet(inner_edge, self.handlebar_fit * 0.2)
+                except ValueError:
+                    print("Inner edge finish failed")  # noqa: T201
+                try:
+                    fillet(outer_edge, self.handlebar_fit * 0.2)
+                except ValueError:
+                    print("Outer edge finish failed")  # noqa: T201
 
             # Horn clamp screw/nut holes
             end_pos = clamp_face.position_at(0.5, 1)
             pos = Vector(end_pos.X, clamp_face.position_at(0, 0).Y, end_pos.Z)
+            cutout_depth = min(
+                (
+                    horn_jaw_thickness
+                    + self.horn_clamp_thickness
+                    - self.screw_size
+                ),
+                self.screw_size,
+            )
             with Locations(Plane(pos)):
                 PrintableCounterBoreHole(
                     radius=(self.screw_size + self.screw_fit) / 2,
                     counter_bore_radius=self.screw_size,
-                    counter_bore_depth=self.screw_size,
+                    counter_bore_depth=cutout_depth,
                 )
             with Locations(-Plane((pos.X, pos.Y, -pos.Z))):
                 NutCutout(
                     self.screw_size + self.screw_fit,
-                    self.screw_size,
+                    cutout_depth,
                     printable_bridge=True,
                     align=(Align.CENTER, Align.CENTER, Align.MAX),
                 )
 
             # Handlebar clamp screw/nut holes
+            screw_loc = Location(
+                ((handlebar_jaw_length - handlebar_grip_size) / 2, 0, 0)
+            )
             with Locations(
-                -Plane(hb_screw_face).offset(-(self.screw_size + 2))
+                -Plane(hb_screw_face)
+                .moved(screw_loc)
+                .offset(-self.screw_size * 2)
             ):
                 CounterBoreHole(
                     radius=(self.screw_size + self.screw_fit) / 2,
@@ -573,7 +682,11 @@ class BikeHornMount(Model):
                     counter_bore_depth=self.screw_size,
                 )
 
-            with Locations(-Plane(hb_nut_face).offset(-(self.screw_size + 2))):
+            with Locations(
+                -Plane(hb_nut_face)
+                .moved(screw_loc)
+                .offset(-self.screw_size * 2)
+            ):
                 NutCutout(
                     self.screw_size + self.screw_fit,
                     self.screw_size * 2,
