@@ -39,10 +39,10 @@ from build123d import (
     SortBy,
     Vector,
     VectorLike,
-    add,
     chamfer,
     extrude,
     fillet,
+    insert,
     loft,
     make_face,
     mirror,
@@ -559,14 +559,14 @@ class SliderTopSlotLips(BasePartObject):
             )
         with BuildPart() as p:
             with BuildSketch(Plane.YZ.offset(base_size / 2)):
-                add(offset(profile.sketch, amount=self.lip_offset))
+                insert(offset(profile.sketch, amount=self.lip_offset))
             extrude(amount=-screw_chamfer * 2)
             with BuildSketch(Plane.YZ.offset(base_size / 2)):
-                add(offset(profile.sketch, amount=self.lip_offset))
+                insert(offset(profile.sketch, amount=self.lip_offset))
             with BuildSketch(
                 Plane.YZ.offset(base_size / 2 + screw_chamfer * 1)
             ):
-                add(
+                insert(
                     offset(
                         profile.sketch,
                         amount=self.lip_offset - screw_chamfer / 2,

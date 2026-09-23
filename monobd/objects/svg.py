@@ -6,8 +6,8 @@ from build123d import (
     BuildSketch,
     Mode,
     Plane,
-    add,
     import_svg,
+    insert,
     mirror,
     scale,
 )
@@ -28,7 +28,7 @@ class SVGSketch(BaseSketchObject):
             ep = import_svg(str(file_name))
             if flip_x:
                 ep = mirror(ep, about=Plane.YZ, mode=Mode.PRIVATE)
-            add(ep)
+            insert(ep)
             bbox = sk.sketch.bounding_box()
             max_dim = max(bbox.size.Y, bbox.size.X)
             ep = scale(ep, by=(size / max_dim))

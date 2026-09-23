@@ -30,10 +30,10 @@ from build123d import (
     RotationLike,
     ShapeList,
     Vector,
-    add,
     chamfer,
     extrude,
     import_step,
+    insert,
     scale,
     split,
 )
@@ -218,13 +218,13 @@ class ConcreteMold(Model):
     def mold_sections(self) -> Compound:
         cuts = (Plane.YZ, Plane.XZ)
         with BuildPart() as p:
-            add(self.mold_base_shape)
+            insert(self.mold_base_shape)
             with Locations(
                 Pos(0, 0, self.mold_thickness)
                 * Pos(0, 0, self.model_size.Z)
                 * Rot(180, 0, 0)
             ):
-                added_model = add(self.molded_model, mode=Mode.SUBTRACT)
+                added_model = insert(self.molded_model, mode=Mode.SUBTRACT)
                 extrude(
                     added_model.faces()
                     .filter_by(Plane.XY)
@@ -277,7 +277,7 @@ class ConcreteMold(Model):
         sections = []
         for section in self.mold_sections.solids():
             with BuildPart() as p:
-                add(section)
+                insert(section)
                 if not p.part:
                     raise RuntimeError("Empty part")
                 with Locations(*_screw_hole_faces(p.part)):

@@ -38,9 +38,9 @@ from build123d import (
     Text,
     TextAlign,
     Vector,
-    add,
     extrude,
     fillet,
+    insert,
     make_face,
     mirror,
     revolve,
@@ -570,8 +570,8 @@ class BikeHornMount(Model):
             ).rotate(clamp_rotation_axis, -self.handlebar_clamp_rotation)
 
             with Locations((0, -HornMeasurements.handlebar_round, 0)):
-                add(clamp)
-                add(clamp_mask, mode=Mode.SUBTRACT)
+                insert(clamp)
+                insert(clamp_mask, mode=Mode.SUBTRACT)
 
             # Save faces for screw hole locations
             clamp_face = p.faces().group_by(Axis.Y)[0].sort_by(Axis.Z)[-1]
