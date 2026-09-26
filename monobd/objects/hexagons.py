@@ -4,7 +4,6 @@ from functools import cached_property
 from build123d import (
     Align,
     BaseSketchObject,
-    BoundBox,
     BuildSketch,
     HexLocations,
     Location,
@@ -58,12 +57,7 @@ class HexagonPattern(BaseSketchObject):
                 rp = RegularPolygon(
                     radius=self.hex_size, side_count=6, mode=Mode.PRIVATE
                 )
-                if (
-                    BoundBox.find_outside_box_2d(
-                        rp.bounding_box(), rect.bounding_box()
-                    )
-                    is not None
-                ):
+                if rect.bounding_box().contains(rp.bounding_box()):
                     whole_hex_locations.append(loc)
         return whole_hex_locations
 
