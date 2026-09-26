@@ -19,10 +19,10 @@ from build123d import (
     Plane,
     RectangleRounded,
     Select,
-    add,
     chamfer,
     extrude,
     fillet,
+    insert,
 )
 
 from monobd.objects import SVGSketch
@@ -70,7 +70,7 @@ class BackCutoutShape(BaseSketchObject):
                 svg_x = svg_sketch.bounding_box().size.X * 1.1
                 svg_copies = max(1, math.floor((width - CUTOUT_INSET) / svg_x))
                 with GridLocations((svg_copies - 1) * svg_x, 0, svg_copies, 1):
-                    add(svg_sketch, mode=Mode.SUBTRACT)
+                    insert(svg_sketch, mode=Mode.SUBTRACT)
             gw = width - inset * 2
             gh = height - inset * 2
             grid_locs = GridLocations(gw, gh, 2, 2)

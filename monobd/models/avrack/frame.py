@@ -21,10 +21,10 @@ from build123d import (
     RectangleRounded,
     RotationLike,
     Select,
-    add,
     chamfer,
     extrude,
     fillet,
+    insert,
     loft,
     mirror,
     validate_inputs,
@@ -158,7 +158,7 @@ class RackFrameHalf(BasePartObject):
                 )
 
             with Locations((part_shift, 0, 0)):
-                add(face_plate)
+                insert(face_plate)
 
             # Tray cutout
             with BuildSketch() as sk:
