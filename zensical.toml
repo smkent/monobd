@@ -5,7 +5,7 @@ site_author = "Stephen Kent"
 site_url = "https://smkent.github.io/monobd"
 repo_url = "https://github.com/smkent/monobd"
 repo_name = "smkent/monobd"
-copyright = "&copy; 2025 Stephen Kent"
+copyright = "&copy; 2025 Stephen Kent and contributors"
 
 nav = [
   { "About" = [

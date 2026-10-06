@@ -7,8 +7,8 @@ name = "monobd"
 dynamic = ["version"]
 description = "A monorepository for my build123d models."
 readme = "README.md"
-license = "GPL-3.0"
-license-files = ["LICENSE"]
+license = "GPL-3.0-only"
+license-files = ["COPYING"]
 requires-python = ">=3.10"
 authors = [{ name = "Stephen Kent", email = "smkent@smkent.net" }]
 classifiers = [
@@ -56,7 +56,7 @@ tag_message = ""
 push = true
 
 [tool.hatch.build.targets.sdist]
-include = ["/monobd", "/tests", "*.md", "LICENSE"]
+include = ["/monobd", "/tests", "*.md", "COPYING"]
 
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
