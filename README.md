@@ -12,8 +12,8 @@ A monorepository for my [build123d][build123d] models.
 
 Copyright (C) 2025 Stephen Kent and contributors
 
-Licensed under the GNU General Public License v3.0 only
-([`GPL-3.0-only`](https://github.com/smkent/monobd/blob/main/COPYING)).
+Licensed under the GNU General Public License v3.0 or later
+([`GPL-3.0-or-later`](https://github.com/smkent/monobd/blob/main/COPYING)).
 
 ## Project template
 
