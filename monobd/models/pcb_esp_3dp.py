@@ -33,7 +33,7 @@ from build123d import (
 from monobd.objects import HexagonPattern
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Generator
 
 
 @dataclass
@@ -82,7 +82,7 @@ class PCBGrid:
 
     @property
     @contextmanager
-    def each_screw(self) -> Iterator[None]:
+    def each_screw(self) -> Generator[None]:
         with (
             self.each_grid,
             GridLocations(
