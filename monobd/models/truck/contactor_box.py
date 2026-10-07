@@ -36,7 +36,7 @@ from build123d import (
 from monobd.print_utils import arrange
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Generator
 
 first_and_last = itemgetter(0, -1)
 
@@ -57,7 +57,7 @@ class Box:
 
     @classmethod
     @contextmanager
-    def insert_standoff_locations(cls) -> Iterator[None]:
+    def insert_standoff_locations(cls) -> Generator[None]:
         with GridLocations(
             cls.mount_hole_position.X, cls.mount_hole_position.Y, 2, 2
         ):
@@ -65,7 +65,7 @@ class Box:
 
     @classmethod
     @contextmanager
-    def standoff_locations(cls) -> Iterator[None]:
+    def standoff_locations(cls) -> Generator[None]:
         locs = []
         locs.extend(
             GridLocations(

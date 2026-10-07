@@ -39,7 +39,7 @@ from build123d import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Generator, Sequence
 
 
 class Assets:
@@ -160,7 +160,7 @@ class ConcreteMold(Model):
         )
 
     @contextmanager
-    def cut_locations(self, cuts: Sequence[Plane]) -> Iterator[Locations]:
+    def cut_locations(self, cuts: Sequence[Plane]) -> Generator[Locations]:
         space = self.screw_size * 3.125
         planes = [c.moved(Pos(0, i * -space, 0)) for i, c in enumerate(cuts)]
         with (
@@ -170,7 +170,7 @@ class ConcreteMold(Model):
             yield locs
 
     @contextmanager
-    def screw_locations(self) -> Iterator[Locations]:
+    def screw_locations(self) -> Generator[Locations]:
         with Locations(
             Pos(self.mold_radius * 0.35, self.screw_size * (2 + 3.125), 0),
             Pos(
@@ -258,7 +258,7 @@ class ConcreteMold(Model):
                 edge.radius, (self.screw_size + self.screw_fit) / 2
             )
 
-        def _screw_hole_faces(p: Compound) -> Iterator[ShapeList[Face]]:
+        def _screw_hole_faces(p: Compound) -> Generator[ShapeList[Face]]:
             for cut_plane in cuts:
                 axis = Axis(cut_plane.origin, cut_plane.z_dir)
                 search_face = (
