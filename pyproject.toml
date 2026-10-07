@@ -7,7 +7,7 @@ name = "monobd"
 dynamic = ["version"]
 description = "A monorepository for my build123d models."
 readme = "README.md"
-license = "GPL-3.0-only"
+license = "GPL-3.0-or-later"
 license-files = ["COPYING"]
 requires-python = ">=3.10"
 authors = [{ name = "Stephen Kent", email = "smkent@smkent.net" }]
