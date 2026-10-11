@@ -169,7 +169,7 @@ class PVCCoupling(BasePartObject):
                 Circle(
                     (outer_diameter - (1 / 10 * IN)) / 2, mode=Mode.SUBTRACT
                 )
-                # Circle(outer_diameter / 2, mode=Mode.SUBTRACT)  # noqa: E501, ERA001
+                # Circle(outer_diameter / 2, mode=Mode.SUBTRACT)  # noqa: ERA001
             extrude(sk.sketch, coupling_length)
             with BuildSketch(
                 Plane.XY, Plane.XY.offset(coupling_length).reverse()
