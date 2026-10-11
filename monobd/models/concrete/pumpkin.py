@@ -194,6 +194,7 @@ class PumpkinStem(BasePartObject):
                     arc_size=-stem_curve_angle,
                 )
                 l0 = Line((0, 0), arc @ 0)
+            arc, l0 = Plane.XZ * arc, Plane.XZ * l0
             if not ln.line:
                 raise RuntimeError("Empty line")
             with BuildSketch(l0 ^ 0):

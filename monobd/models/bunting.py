@@ -137,7 +137,7 @@ class CapLoop(BasePartObject):
                             ),
                         )
                         scale(by=(0.47, 1.0, 1.0))
-            sweep(path=ln)  # ty: ignore[invalid-argument-type]
+            sweep(path=ln.line)
             if angle != 180:
                 chamfer(p.edges().group_by(Axis.Z)[-1], edge_len)
         if not p.part:

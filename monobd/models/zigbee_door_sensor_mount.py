@@ -116,15 +116,14 @@ class SensorMountCover(BasePartObject):
                 )
             fillet(p.edges().filter_by(Axis.Z), sensor_fillet)
             fillet(p.edges().group_by(Axis.Z)[-1], sensor_fillet)
-            with Locations(placement_location):
-                with BuildSketch() as sk:
-                    HatchPattern(
-                        sensor_size[0] - thickness * 2,
-                        sensor_size[1] - thickness * 2,
-                        4.8 * MM,
-                        hatch_rotation=30,
-                    )
-                extrude(sk.sketch, thickness * 2.5, mode=Mode.SUBTRACT)
+            with BuildSketch() as sk:
+                HatchPattern(
+                    sensor_size[0] - thickness * 2,
+                    sensor_size[1] - thickness * 2,
+                    4.8 * MM,
+                    hatch_rotation=30,
+                )
+            extrude(sk.sketch, thickness * 2.5, mode=Mode.SUBTRACT)
             # Cover screw holes
             with (
                 Locations(-Plane.XY),

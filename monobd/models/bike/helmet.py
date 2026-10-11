@@ -845,7 +845,7 @@ class MountBottomBody(BasePartObject):
                         (base_size / 2, -tilt / 2, ww / 2),
                         helmet_curve_radius,
                     )
-                    mirror(about=Plane.YZ)
+                    mirror(about=Plane.XY)
                 with BuildLine(Plane.XZ):
                     for ym in (-1, 1):
                         RadiusArc(

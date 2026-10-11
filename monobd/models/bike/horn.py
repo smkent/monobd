@@ -287,7 +287,7 @@ class MountClampProfileMask(BasePartObject):
                         height * 2,
                         align=(Align.MIN, Align.CENTER),
                     )
-                with BuildSketch(Plane.YZ, mode=Mode.SUBTRACT):
+                with BuildSketch(mode=Mode.SUBTRACT):
                     with BuildLine() as ln:
                         min_x = -HornMeasurements.handlebar_round
                         max_x = (
